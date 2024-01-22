@@ -1,0 +1,141 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Project SexyGPT{
+    database_type: 'PostgreSQL'
+    Note: '''
+        # SexyGPT makes you sexy
+    '''
+}
+
+/*
+有分為使用者跟內部帳號
+*/
+Table user as U{
+  user_id uuid [pk, default: `uuid_generate_v4()`]
+  user_name varchar [not null]
+  email varchar [unique, not null]
+  is_email_verified bool [not null, default: false]
+  hashed_password varchar [not null]
+  password_changed_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  sso_identifer varchar [null]
+  is_internal bool [not null,default: false]
+  cr_date timestamptz  [not null, default: `now()`]
+  up_date timestamptz
+  cr_user varchar [not null]
+  up_user varchar
+
+
+  Indexes {
+    user_id
+  }
+}
+
+Table role as r{
+  role_id uuid [pk, default: `uuid_generate_v4()`]
+  role_name varchar [not null]
+  is_enable bool [not null, default: true]
+  cr_date timestamptz  [not null, default: `now()`]
+  up_date timestamptz
+  cr_user varchar [not null]
+  up_user varchar
+  Indexes {
+    role_name
+  }
+}
+
+Table user_role {
+  user_id uuid [pk, ref: > U.user_id, not null]
+  role_id uuid [not null]
+  cr_date timestamptz  [not null, default: `now()`]
+  up_date timestamptz
+  cr_user varchar [not null]
+  up_user varchar
+  Indexes {
+    user_id
+  }
+}
+
+/*
+email認證  帳號開通?
+*/
+Table vertify_email {
+  id bigserial [pk]
+  user_id uuid [ref: > U.user_id, not null]
+  email varchar [not null]
+  secret_code varchar [not null]
+  is_used bool [not null, default: false]
+  cr_date timestamptz  [not null, default: `now()`]
+  used_date timestamptz
+  expired_at timestamptz  [not null, default: `now() + interval '15 minutes'`]
+}
+
+/*
+token管理
+有資料表示該使用者處於登入狀態
+sesstion存活時間等同refresh_token存活時間
+*/
+Table session {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  user_id uuid [ref: > U.user_id, not null, unique]
+  refresh_token varchar [not null]
+  user_agent varchar [not null]
+  client_ip varchar [not null]
+  is_blocked bool [not null, default: false]
+  cr_date timestamptz  [not null, default: `now()`]
+  expired_at timestamptz  [default: `now() + interval '3 days'`]
+}
+
+
+enum gpt_key_type{
+  t3
+  t4
+}
+
+/*
+紀錄每個key的資訊
+*/
+Table gpt_key{
+  key_id uuid [pk, default: `uuid_generate_v4()`]
+  type gpt_key_type [not null]
+  expired_at timestamptz  [not null]
+  //由哪個帳號申請
+  assoicate_account uuid [ref: > U.user_id]
+  max_usage decimal [not null]
+  current_usage decimal [not null]
+  max_share decimal [not null]
+  current_share decimal [not null]
+}
+
+/*
+每個使用者當前使用哪個key
+*/
+Table account_key{
+  user_id uuid [ref: > U.user_id, not null, unique]
+  key_id uuid [ref: > gpt_key.key_id,  not null]
+  expired_at timestamptz  [not null]
+  cr_date timestamptz  [not null, default: `now()`]
+  up_date timestamptz
+}
+
+/*
+對話session
+*/
+Table msg_session{
+  msg_session_id uuid [pk, not null,default: `uuid_generate_v4()`]
+  user_id uuid [ref: > U.user_id, not null]
+  cr_date timestamptz  [not null, default: `now()`]
+}
+
+/*
+Msg
+*/
+Table msg{
+  msg_id bigserial [not null]
+  msg_session_id uuid [ref: > msg_session.msg_session_id, not null]
+  user_msg varchar [not null]
+  response varchar [null]
+  cr_date timestamptz  [not null, default: `now()`]
+}
+
+
