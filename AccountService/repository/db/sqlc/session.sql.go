@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -25,11 +24,11 @@ INSERT INTO "session"(
 `
 
 type CreateSessionParams struct {
-	UserID       pgtype.UUID `json:"user_id"`
-	RefreshToken string      `json:"refresh_token"`
-	UserAgent    string      `json:"user_agent"`
-	ClientIp     string      `json:"client_ip"`
-	ExpiredAt    time.Time   `json:"expired_at"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	RefreshToken string             `json:"refresh_token"`
+	UserAgent    string             `json:"user_agent"`
+	ClientIp     string             `json:"client_ip"`
+	ExpiredAt    pgtype.Timestamptz `json:"expired_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {

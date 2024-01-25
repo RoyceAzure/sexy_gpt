@@ -3,17 +3,31 @@ module github.com/RoyceAzure/sexy_gpt/account_service
 go 1.21.3
 
 require (
+	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.4.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0
 	github.com/jackc/pgx/v5 v5.5.2
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.17.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20240102182953-50ed04b92917
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240102182953-50ed04b92917
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
 )
 
 require (
+	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
+	google.golang.org/genproto v0.0.0-20231212172506-995d672761c0 // indirect
 )
 
 require (

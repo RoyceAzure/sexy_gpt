@@ -18,18 +18,18 @@ CREATE TABLE "user" (
   "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "sso_identifer" varchar,
   "is_internal" bool NOT NULL DEFAULT false,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
-  "up_date" timestamptz(9),
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
+  "up_date" timestamptz,
   "cr_user" varchar NOT NULL,
   "up_user" varchar
 );
 
 CREATE TABLE "role" (
   "role_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
-  "role_name" varchar NOT NULL,
+  "role_name" varchar UNIQUE NOT NULL,
   "is_enable" bool NOT NULL DEFAULT true,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
-  "up_date" timestamptz(9),
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
+  "up_date" timestamptz,
   "cr_user" varchar NOT NULL,
   "up_user" varchar
 );
@@ -37,8 +37,8 @@ CREATE TABLE "role" (
 CREATE TABLE "user_role" (
   "user_id" uuid PRIMARY KEY NOT NULL,
   "role_id" uuid NOT NULL,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
-  "up_date" timestamptz(9),
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
+  "up_date" timestamptz,
   "cr_user" varchar NOT NULL,
   "up_user" varchar
 );
@@ -49,8 +49,8 @@ CREATE TABLE "vertify_email" (
   "email" varchar NOT NULL,
   "secret_code" varchar NOT NULL,
   "is_used" bool NOT NULL DEFAULT false,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
-  "used_date" timestamptz(9),
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
+  "used_date" timestamptz,
   "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
 );
 
@@ -61,7 +61,7 @@ CREATE TABLE "session" (
   "user_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
   "is_blocked" bool NOT NULL DEFAULT false,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
   "expired_at" timestamptz DEFAULT (now() + interval '3 days')
 );
 
@@ -80,14 +80,14 @@ CREATE TABLE "account_key" (
   "user_id" uuid UNIQUE NOT NULL,
   "key_id" uuid NOT NULL,
   "expired_at" timestamptz NOT NULL,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now()),
-  "up_date" timestamptz(9)
+  "cr_date" timestamptz NOT NULL DEFAULT (now()),
+  "up_date" timestamptz
 );
 
 CREATE TABLE "msg_session" (
   "msg_session_id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
   "user_id" uuid NOT NULL,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now())
+  "cr_date" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "msg" (
@@ -95,7 +95,7 @@ CREATE TABLE "msg" (
   "msg_session_id" uuid NOT NULL,
   "user_msg" varchar NOT NULL,
   "response" varchar,
-  "cr_date" timestamptz(9) NOT NULL DEFAULT (now())
+  "cr_date" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE INDEX ON "user" ("user_id");
@@ -119,3 +119,4 @@ ALTER TABLE "account_key" ADD FOREIGN KEY ("key_id") REFERENCES "gpt_key" ("key_
 ALTER TABLE "msg_session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("user_id");
 
 ALTER TABLE "msg" ADD FOREIGN KEY ("msg_session_id") REFERENCES "msg_session" ("msg_session_id");
+

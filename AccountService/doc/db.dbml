@@ -33,7 +33,7 @@ Table user as U{
 
 Table role as r{
   role_id uuid [pk, default: `uuid_generate_v4()`]
-  role_name varchar [not null]
+  role_name varchar [not null, unique]
   is_enable bool [not null, default: true]
   cr_date timestamptz  [not null, default: `now()`]
   up_date timestamptz

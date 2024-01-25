@@ -110,6 +110,60 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserDTO = `-- name: GetUserDTO :one
+SELECT user_id, user_name, email, is_email_verified, hashed_password, password_changed_at, sso_identifer, is_internal, cr_date, up_date, cr_user, up_user, role_id, role_name FROM "user_role_view"
+WHERE user_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserDTO(ctx context.Context, userID pgtype.UUID) (UserRoleView, error) {
+	row := q.db.QueryRow(ctx, getUserDTO, userID)
+	var i UserRoleView
+	err := row.Scan(
+		&i.UserID,
+		&i.UserName,
+		&i.Email,
+		&i.IsEmailVerified,
+		&i.HashedPassword,
+		&i.PasswordChangedAt,
+		&i.SsoIdentifer,
+		&i.IsInternal,
+		&i.CrDate,
+		&i.UpDate,
+		&i.CrUser,
+		&i.UpUser,
+		&i.RoleID,
+		&i.RoleName,
+	)
+	return i, err
+}
+
+const getUserDTOByEmail = `-- name: GetUserDTOByEmail :one
+SELECT user_id, user_name, email, is_email_verified, hashed_password, password_changed_at, sso_identifer, is_internal, cr_date, up_date, cr_user, up_user, role_id, role_name FROM "user_role_view"
+WHERE email = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserDTOByEmail(ctx context.Context, email string) (UserRoleView, error) {
+	row := q.db.QueryRow(ctx, getUserDTOByEmail, email)
+	var i UserRoleView
+	err := row.Scan(
+		&i.UserID,
+		&i.UserName,
+		&i.Email,
+		&i.IsEmailVerified,
+		&i.HashedPassword,
+		&i.PasswordChangedAt,
+		&i.SsoIdentifer,
+		&i.IsInternal,
+		&i.CrDate,
+		&i.UpDate,
+		&i.CrUser,
+		&i.UpUser,
+		&i.RoleID,
+		&i.RoleName,
+	)
+	return i, err
+}
+
 const getUsers = `-- name: GetUsers :many
 SELECT user_id, user_name, email, is_email_verified, hashed_password, password_changed_at, sso_identifer, is_internal, cr_date, up_date, cr_user, up_user FROM "user"
 ORDER BY user_id
@@ -144,6 +198,53 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, err
 			&i.UpDate,
 			&i.CrUser,
 			&i.UpUser,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersDTO = `-- name: GetUsersDTO :many
+SELECT user_id, user_name, email, is_email_verified, hashed_password, password_changed_at, sso_identifer, is_internal, cr_date, up_date, cr_user, up_user, role_id, role_name FROM "user_role_view"
+ORDER BY user_id
+LIMIT $1
+OFFSET $2
+`
+
+type GetUsersDTOParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetUsersDTO(ctx context.Context, arg GetUsersDTOParams) ([]UserRoleView, error) {
+	rows, err := q.db.Query(ctx, getUsersDTO, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []UserRoleView{}
+	for rows.Next() {
+		var i UserRoleView
+		if err := rows.Scan(
+			&i.UserID,
+			&i.UserName,
+			&i.Email,
+			&i.IsEmailVerified,
+			&i.HashedPassword,
+			&i.PasswordChangedAt,
+			&i.SsoIdentifer,
+			&i.IsInternal,
+			&i.CrDate,
+			&i.UpDate,
+			&i.CrUser,
+			&i.UpUser,
+			&i.RoleID,
+			&i.RoleName,
 		); err != nil {
 			return nil, err
 		}

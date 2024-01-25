@@ -5,13 +5,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/constants"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
-func CreateRole(t *testing.T) Role {
-	roleName := random.RandomString(5)
+func CreateRole(t *testing.T, roleName string) Role {
+	if roleName == "" {
+		roleName = random.RandomString(5)
+	}
 
 	role, err := testDao.CreateRole(context.Background(), CreateRoleParams{
 		RoleName: roleName,
@@ -22,18 +25,18 @@ func CreateRole(t *testing.T) Role {
 	return role
 }
 func TestCreateRole(t *testing.T) {
-	CreateRole(t)
+	CreateRole(t, "")
 }
 
 func TestGetRole(t *testing.T) {
-	role := CreateRole(t)
+	role := CreateRole(t, "")
 	getRole, err := testDao.GetRole(context.Background(), role.RoleID)
 	require.NotEmpty(t, getRole)
 	require.NoError(t, err)
 }
 
 func TestGetRoleByRoleName(t *testing.T) {
-	role := CreateRole(t)
+	role := CreateRole(t, "")
 	getRole, err := testDao.GetRoleByRoleName(context.Background(), role.RoleName)
 	require.NotEmpty(t, getRole)
 	require.NoError(t, err)
@@ -41,7 +44,7 @@ func TestGetRoleByRoleName(t *testing.T) {
 
 func TestGetRoles(t *testing.T) {
 	for i := 0; i < 5; i++ {
-		CreateRole(t)
+		CreateRole(t, "")
 	}
 	roles, err := testDao.GetRoles(context.Background(), GetRolesParams{
 		Limit:  5,
@@ -52,7 +55,7 @@ func TestGetRoles(t *testing.T) {
 }
 
 func TestUpdateRole(t *testing.T) {
-	role := CreateRole(t)
+	role := CreateRole(t, "")
 	roleName := random.RandomString(5)
 	now := time.Now().UTC()
 	arg := UpdateRoleParams{
@@ -83,4 +86,13 @@ func TestUpdateRole(t *testing.T) {
 	require.Equal(t, arg.IsEnable.Bool, updatedRole.IsEnable)
 	// require.Equal(t, arg.UpDate.Time, updatedRole.UpDate)
 	require.Equal(t, arg.UpUser.String, updatedRole.UpUser.String)
+}
+
+/*
+for init
+*/
+
+func TestInitCreateRole(t *testing.T) {
+	CreateRole(t, constants.DEFAULT_USER_ROLE)
+	CreateRole(t, constants.PRIME_USER_ROLE)
 }

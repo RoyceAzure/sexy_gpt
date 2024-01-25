@@ -38,3 +38,18 @@ SET
     up_user = COALESCE(sqlc.narg(up_user),up_user)
 WHERE user_id = sqlc.arg(user_id)
 RETURNING *;
+
+
+-- name: GetUserDTOByEmail :one
+SELECT * FROM "user_role_view"
+WHERE email = sqlc.arg(email) LIMIT 1;
+
+-- name: GetUserDTO :one
+SELECT * FROM "user_role_view"
+WHERE user_id = sqlc.arg(user_id) LIMIT 1;
+
+-- name: GetUsersDTO :many
+SELECT * FROM "user_role_view"
+ORDER BY user_id
+LIMIT $1
+OFFSET $2;

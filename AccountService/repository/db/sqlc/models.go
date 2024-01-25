@@ -98,14 +98,14 @@ type Role struct {
 }
 
 type Session struct {
-	ID           pgtype.UUID `json:"id"`
-	UserID       pgtype.UUID `json:"user_id"`
-	RefreshToken string      `json:"refresh_token"`
-	UserAgent    string      `json:"user_agent"`
-	ClientIp     string      `json:"client_ip"`
-	IsBlocked    bool        `json:"is_blocked"`
-	CrDate       time.Time   `json:"cr_date"`
-	ExpiredAt    time.Time   `json:"expired_at"`
+	ID           pgtype.UUID        `json:"id"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	RefreshToken string             `json:"refresh_token"`
+	UserAgent    string             `json:"user_agent"`
+	ClientIp     string             `json:"client_ip"`
+	IsBlocked    bool               `json:"is_blocked"`
+	CrDate       time.Time          `json:"cr_date"`
+	ExpiredAt    pgtype.Timestamptz `json:"expired_at"`
 }
 
 type User struct {
@@ -130,6 +130,23 @@ type UserRole struct {
 	UpDate pgtype.Timestamptz `json:"up_date"`
 	CrUser string             `json:"cr_user"`
 	UpUser pgtype.Text        `json:"up_user"`
+}
+
+type UserRoleView struct {
+	UserID            pgtype.UUID        `json:"user_id"`
+	UserName          string             `json:"user_name"`
+	Email             string             `json:"email"`
+	IsEmailVerified   bool               `json:"is_email_verified"`
+	HashedPassword    string             `json:"hashed_password"`
+	PasswordChangedAt time.Time          `json:"password_changed_at"`
+	SsoIdentifer      pgtype.Text        `json:"sso_identifer"`
+	IsInternal        bool               `json:"is_internal"`
+	CrDate            time.Time          `json:"cr_date"`
+	UpDate            pgtype.Timestamptz `json:"up_date"`
+	CrUser            string             `json:"cr_user"`
+	UpUser            pgtype.Text        `json:"up_user"`
+	RoleID            pgtype.UUID        `json:"role_id"`
+	RoleName          pgtype.Text        `json:"role_name"`
 }
 
 type VertifyEmail struct {

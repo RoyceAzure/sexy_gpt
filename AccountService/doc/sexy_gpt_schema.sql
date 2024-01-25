@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2024-01-22T09:25:47.695Z
+-- Generated at: 2024-01-24T08:43:48.203Z
 
 CREATE TYPE "gpt_key_type" AS ENUM (
   't3',
@@ -24,7 +24,7 @@ CREATE TABLE "user" (
 
 CREATE TABLE "role" (
   "role_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
-  "role_name" varchar NOT NULL,
+  "role_name" varchar UNIQUE NOT NULL,
   "is_enable" bool NOT NULL DEFAULT true,
   "cr_date" timestamptz NOT NULL DEFAULT (now()),
   "up_date" timestamptz,

@@ -11,7 +11,7 @@ import (
 
 func CreateUserRole(t *testing.T) UserRole {
 	user := CreateRandomUsesr(t)
-	role := CreateRole(t)
+	role := CreateRole(t, "")
 
 	usesrRole, err := testDao.CreateUserRole(context.Background(), CreateUserRoleParams{
 		UserID: user.UserID,
@@ -23,7 +23,7 @@ func CreateUserRole(t *testing.T) UserRole {
 	return usesrRole
 }
 func TestCreateUserRole(t *testing.T) {
-	CreateRole(t)
+	CreateRole(t, "")
 }
 
 func TestGetUserRoleByUserId(t *testing.T) {
@@ -50,7 +50,7 @@ func TestGetUserRoles(t *testing.T) {
 
 func TestUpdateUserRole(t *testing.T) {
 	userRole := CreateUserRole(t)
-	newRole := CreateRole(t)
+	newRole := CreateRole(t, "")
 
 	now := time.Now().UTC()
 
