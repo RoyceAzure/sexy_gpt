@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi"
+	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
+	"github.com/RoyceAzure/sexy_gpt/account_service/service"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/config"
 	"github.com/golang-migrate/migrate/v4"
@@ -63,7 +65,15 @@ func runDBMigration(migrationURL string, dbSource string) {
 }
 
 func runGRPCServer(configs config.Config, dao db.Dao) {
-	server, err := gapi.NewServer(configs, dao)
+	tokenMaker, err := token.NewPasetoMaker(configs.TokenSymmetricKey)
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("cannot create token maker")
+	}
+	userService := service.NewUserService(dao)
+
+	server, err := gapi.NewServer(configs, dao, tokenMaker, userService)
 	if err != nil {
 		log.Fatal().
 			Err(err).

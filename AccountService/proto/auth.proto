@@ -1,0 +1,52 @@
+syntax = "proto3";
+package pb;
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/account_service/shared/pb";
+
+
+
+message Token{
+    string audience=1;
+    string Issuer=2;
+    google.protobuf.Timestamp issure_at=3;
+    google.protobuf.Timestamp expired_at=4;
+    string access_token=5;
+    string refresh_token=6;
+}
+
+
+message LoginRequset{
+    string email=1;
+    string password=2;
+}
+
+message LoginResponse{
+    UserDTO data=1;
+    Token token_data=2;
+}
+
+
+
+message LogoutRequset{
+}
+
+message LogoutResponse{
+}
+
+message RefreshTokenRequset{
+}
+
+message RefreshTokenResponse{
+    string audience=1;
+    string Issuer=2;
+    google.protobuf.Timestamp issure_at=3;
+    google.protobuf.Timestamp expired_at=4;
+    string access_token=5;
+}
+
+
+
+

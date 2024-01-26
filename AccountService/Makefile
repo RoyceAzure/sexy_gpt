@@ -46,7 +46,7 @@ server:
 # mock:
 # 	mockgen -source="./distributor.go" -package=mockwk -destination="mock/distributor_mock.go"
 # 	mockgen  . Store
-
+#mockgen --destination github.com/RoyceAzure/sexy_gpt/account_service/repository/db/mock --package mock_sqlc  github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc Dao
 db_docs:
 	docker run --rm -v $(current_dir)/doc:/app/data -w /app/data node_docs dbdocs build ./db.dbml
 

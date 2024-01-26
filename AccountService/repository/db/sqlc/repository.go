@@ -39,7 +39,7 @@ func (dao *SQLDao) execTx(ctx context.Context, options pgx.TxOptions, fn func(*Q
 
 	if err != nil {
 		if rbErr := tx.Rollback(ctx); rbErr != nil {
-			return gpt_error.InternalError(rbErr)
+			return gpt_error.ErrInternal.Err(rbErr)
 		}
 		return err
 	}

@@ -25,6 +25,8 @@ type Config struct {
 	EmailSenderAddress     string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	EmailSenderPassword    string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
 	GrpcSchedulerAddress   string        `mapstructure:"GRPC_SCHEDULER_ADDRESS"`
+	AUTH_AUDIENCE          string        `mapstructure:"AUTH_AUDIENCE"`
+	AUTH_ISSUER            string        `mapstructure:"AUTH_ISSUER"`
 }
 
 /*
