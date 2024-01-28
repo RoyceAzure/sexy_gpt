@@ -114,13 +114,22 @@ func InvalidArgumentError(violations []*errdetails.BadRequest_FieldViolation) er
 
 // API
 func APIUnauthticatedError(err error) error {
+	if err == nil {
+		return status.Error(codes.Unauthenticated, "")
+	}
 	return status.Error(codes.Unauthenticated, err.Error())
 }
 
 func APIInternalError(err error) error {
+	if err == nil {
+		return status.Error(codes.Unauthenticated, "")
+	}
 	return status.Error(codes.Internal, err.Error())
 }
 
 func APIInValidateOperation(err error) error {
+	if err == nil {
+		return status.Error(codes.Unauthenticated, "")
+	}
 	return status.Error(codes.FailedPrecondition, err.Error())
 }

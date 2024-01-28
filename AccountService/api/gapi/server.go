@@ -16,12 +16,12 @@ type Server struct {
 	userService service.IUserService
 }
 
-func NewServer(config config.Config, dao db.Dao, tokenMaker token.Maker, userService service.IUserService) (*Server, error) {
+func NewServer(config config.Config, dao db.Dao, tokenMaker token.Maker, service service.IService) (*Server, error) {
 	server := &Server{
 		config:      config,
 		dao:         dao,
 		tokenMaker:  tokenMaker,
-		userService: userService,
+		userService: service,
 	}
 	return server, nil
 }

@@ -13,7 +13,6 @@ import (
 )
 
 func TestIsValidateUser(t *testing.T) {
-
 	testCases := []struct {
 		name          string
 		email         string
@@ -85,11 +84,10 @@ func TestIsValidateUser(t *testing.T) {
 
 		tc.buildStub(mock_dao)
 
-		userService := NewUserService(mock_dao)
+		userService := NewService(mock_dao)
 
-		err := userService.IsValidateUser(context.Background(), tc.email)
+		_, err := userService.IsValidateUser(context.Background(), tc.email)
 
 		tc.checkResponse(t, err)
-
 	}
 }

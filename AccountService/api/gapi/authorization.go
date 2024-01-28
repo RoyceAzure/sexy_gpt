@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/model"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -15,7 +15,7 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
-func (server *Server) authorizUser(ctx context.Context) (*token.TokenPayload, error) {
+func (server *Server) authorizUser(ctx context.Context) (*model.AuthUser, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("misssing metadata")
@@ -40,10 +40,19 @@ func (server *Server) authorizUser(ctx context.Context) (*token.TokenPayload, er
 		return nil, fmt.Errorf("invaliad access token : %s", err)
 	}
 
-	err = server.userService.IsValidateUser(ctx, payload.Subject.UPN)
+	user, err := server.userService.IsValidateUser(ctx, payload.Subject.UPN)
 	if err != nil {
 		return nil, err
 	}
 
-	return payload, nil
+	res := model.AuthUser{
+		UserId:     user.UserID.Bytes,
+		UserName:   user.UserName,
+		Email:      user.Email,
+		RoleId:     user.RoleID.Bytes,
+		RoleName:   user.RoleName.String,
+		IsInternal: user.IsInternal,
+	}
+
+	return &res, nil
 }

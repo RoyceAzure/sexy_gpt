@@ -1,9 +1,17 @@
 package service
 
+import db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
+
 type IService interface {
 	IUserService
 }
 
 type Service struct {
-	UserService
+	dao db.Dao
+}
+
+func NewService(dao db.Dao) *Service {
+	return &Service{
+		dao: dao,
+	}
 }

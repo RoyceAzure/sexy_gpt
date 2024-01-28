@@ -71,7 +71,7 @@ func runGRPCServer(configs config.Config, dao db.Dao) {
 			Err(err).
 			Msg("cannot create token maker")
 	}
-	userService := service.NewUserService(dao)
+	userService := service.NewService(dao)
 
 	server, err := gapi.NewServer(configs, dao, tokenMaker, userService)
 	if err != nil {

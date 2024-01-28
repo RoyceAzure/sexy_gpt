@@ -59,14 +59,27 @@ func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 }
 
 /*
-檢查pg error若查詢不到的情況的回傳值
+Internal 可以查所有  其餘只能查自己
 */
 func (s *Server) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	if violations := validateGetUserReq(req); violations != nil {
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
+	payload, err := s.authorizUser(ctx)
+	if err != nil {
+		if ge, ok := gpt_error.FromError(err); ok {
+			ge.Is(&gpt_error.ErrInternal)
+			return nil, gpt_error.APIInternalError(err)
+		}
+		return nil, gpt_error.APIUnauthticatedError(err)
+	}
 
-	uid, _ := uuid.Parse(req.GetUserId())
+	var uid uuid.UUID
+	if payload.IsInternal {
+		uid, _ = uuid.Parse(req.GetUserId())
+	} else {
+		uid = payload.UserId
+	}
 
 	user, err := s.dao.GetUserDTO(ctx, pgtype.UUID{
 		Bytes: uid,
@@ -74,7 +87,10 @@ func (s *Server) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUs
 	})
 
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not exists")
+		if err.Error() == gpt_error.ERR_NOT_FOUND.Error() {
+			return nil, status.Errorf(codes.NotFound, "user not exists")
+		}
+		return nil, status.Errorf(codes.Internal, "internal err")
 	}
 
 	res := &pb.GetUserResponse{
@@ -89,6 +105,19 @@ func (s *Server) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUs
 */
 
 func (s *Server) GetUsers(ctx context.Context, req *pb.GetUsersRequest) (*pb.GetUsersResponse, error) {
+	payload, err := s.authorizUser(ctx)
+	if err != nil {
+		if ge, ok := gpt_error.FromError(err); ok {
+			if ge.Is(&gpt_error.ErrInValidatePreConditionOp) || ge.Is(&gpt_error.ErrNotFound) {
+				return nil, gpt_error.APIUnauthticatedError(err)
+			}
+		}
+		return nil, gpt_error.APIInternalError(err)
+	}
+	if !payload.IsInternal {
+		return nil, gpt_error.APIUnauthticatedError(err)
+	}
+
 	pgsize := req.GetPageSize()
 	page := req.GetPage()
 
@@ -120,11 +149,25 @@ func (s *Server) GetUserByEmail(ctx context.Context, req *pb.GetUserByEmailReque
 	if violations := validateGetUserByEmailReq(req); violations != nil {
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
+	payload, err := s.authorizUser(ctx)
+	if err != nil {
+		return nil, gpt_error.APIUnauthticatedError(err)
+	}
 
-	user, err := s.dao.GetUserDTOByEmail(ctx, req.GetEmail())
+	var email string
+	if payload.IsInternal {
+		email = req.GetEmail()
+	} else {
+		email = payload.Email
+	}
+
+	user, err := s.dao.GetUserDTOByEmail(ctx, email)
 
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not exists")
+		if err.Error() == gpt_error.ERR_NOT_FOUND.Error() {
+			return nil, status.Errorf(codes.NotFound, "user not exists")
+		}
+		return nil, status.Errorf(codes.Internal, "internal err")
 	}
 
 	res := &pb.GetUserByEmailResponse{
@@ -141,8 +184,18 @@ func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 	if violations := validateUpdateUserReq(req); violations != nil {
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
+	payload, err := s.authorizUser(ctx)
+	if err != nil {
+		return nil, gpt_error.APIUnauthticatedError(err)
+	}
 
-	uid, _ := uuid.Parse(req.GetUserId())
+	var uid uuid.UUID
+	if payload.IsInternal {
+		uid, _ = uuid.Parse(req.GetUserId())
+	} else {
+		uid = payload.UserId
+	}
+
 	arg := db.UpdateUserParams{
 		UserID: pgtype.UUID{
 			Bytes: uid,
@@ -175,9 +228,9 @@ func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 	updatedUser, err := s.dao.UpdateUser(ctx, arg)
 	if err != nil {
 		if err.Error() == gpt_error.ERR_NOT_FOUND.Error() {
-			return nil, status.Errorf(codes.NotFound, "user doesn't exists")
+			return nil, status.Errorf(codes.NotFound, "user not exists")
 		}
-		return nil, status.Errorf(codes.Internal, "failed to update user")
+		return nil, status.Errorf(codes.Internal, "internal err")
 	}
 
 	res := &pb.UpdateUserResponse{

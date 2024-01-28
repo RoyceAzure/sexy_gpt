@@ -135,7 +135,7 @@ func (s *Server) Logout(ctx context.Context, req *pb.LogoutRequset) (*pb.LogoutR
 		return nil, gpt_error.APIUnauthticatedError(err)
 	}
 
-	userId := payload.Subject.UserId
+	userId := payload.UserId
 
 	s.dao.DeleteSession(ctx, pgtype.UUID{
 		Bytes: userId,
@@ -151,7 +151,7 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 	}
 
 	session, err := s.dao.GetSessionByUserId(ctx, pgtype.UUID{
-		Bytes: payload.Subject.UserId,
+		Bytes: payload.UserId,
 		Valid: true,
 	})
 
@@ -160,7 +160,7 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 		return &pb.RefreshTokenResponse{}, status.Errorf(codes.Canceled, "please login again")
 	}
 
-	tokenSubject := token.NewTokenSubject(payload.Subject.UPN, payload.Subject.UserId, payload.Subject.RoleId)
+	tokenSubject := token.NewTokenSubject(payload.Email, payload.UserId, payload.RoleId)
 	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, time.Hour*1)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create token")
