@@ -1,0 +1,20 @@
+#build stage
+FROM golang:1.21.3-alpine3.18 AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o main main.go
+
+#Run stage
+FROM alpine:3.18
+WORKDIR /app
+COPY --from=builder /app/main .
+COPY app.env .
+COPY ./repository/db/migrations ./repository/db/migrations 
+COPY wait-for.sh .
+RUN chmod +x wait-for.sh
+COPY doc doc 
+
+ENV MONGODB_ADDRESS=mongodb://mongo:27017
+ENV REDIS_Q_ADDRESS=redis-asynq:6379
+ENV SERVICEID=accountService
+CMD ["/app/main"]
