@@ -18,15 +18,23 @@ message Token{
 }
 
 
+
+message AuthDTOResponse{
+    string message=1;
+    UserDTO user=2;
+    Token token=3;
+}
+
+
 message LoginRequset{
     string email=1;
     string password=2;
 }
 
-message LoginResponse{
-    UserDTO data=1;
-    Token token_data=2;
-}
+// message LoginResponse{
+//     UserDTO data=1;
+//     Token token_data=2;
+// }
 
 
 
@@ -34,6 +42,7 @@ message LogoutRequset{
 }
 
 message LogoutResponse{
+    string message=1;
 }
 
 message RefreshTokenRequset{
@@ -41,11 +50,8 @@ message RefreshTokenRequset{
 }
 
 message RefreshTokenResponse{
-    string audience=1;
-    string Issuer=2;
-    google.protobuf.Timestamp issure_at=3;
-    google.protobuf.Timestamp expired_at=4;
-    string access_token=5;
+    string message=1;
+    Token token=2;
 }
 
 

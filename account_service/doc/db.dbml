@@ -65,6 +65,7 @@ Table vertify_email {
   email varchar [not null]
   secret_code varchar [not null]
   is_used bool [not null, default: false]
+  is_validated bool [not null, default: true]
   cr_date timestamptz  [not null, default: `now()`]
   used_date timestamptz
   expired_at timestamptz  [not null, default: `now() + interval '15 minutes'`]

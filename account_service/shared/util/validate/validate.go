@@ -86,8 +86,8 @@ func FieldViolations(field string, errs []error) *errdetails.BadRequest_FieldVio
 	var sb strings.Builder
 	for _, err := range errs {
 		sb.WriteString(err.Error())
-		sb.WriteString("\n")
+		sb.WriteString(",")
 	}
-	sb.WriteString("\n")
-	return FieldViolation(field, fmt.Errorf(sb.String()))
+	temp := sb.String()
+	return FieldViolation(field, fmt.Errorf(temp[:len(temp)-1]))
 }

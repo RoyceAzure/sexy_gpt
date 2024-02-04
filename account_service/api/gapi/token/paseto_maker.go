@@ -20,6 +20,7 @@ func NewPasetoMaker(symmerickey string) (Maker, error) {
 	return &PasetoMaker{paseto.NewV2(), []byte(symmerickey)}, nil
 }
 
+// err: encode err
 func (maker *PasetoMaker) CreateToken(subject *TokenSubject, audience string, issuer string, duration time.Duration) (string, *TokenPayload, error) {
 	tokenPayload := NewTokenPayload(subject, audience, issuer, duration)
 	token, err := maker.paseto.Encrypt(maker.symmerickey, tokenPayload, nil)

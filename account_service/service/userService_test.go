@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -23,8 +24,8 @@ func TestIsValidateUser(t *testing.T) {
 			name:  "ok",
 			email: "royce",
 			buildStub: func(dao *mock_db.MockDao) {
-				dao.EXPECT().GetUserByEmail(gomock.Any(), gomock.Eq("royce")).
-					Times(1).Return(db.User{
+				dao.EXPECT().GetUserDTOByEmail(gomock.Any(), gomock.Eq("royce")).
+					Times(1).Return(db.UserRoleView{
 					IsEmailVerified: true,
 				}, nil)
 			},
@@ -36,41 +37,35 @@ func TestIsValidateUser(t *testing.T) {
 			name:  "user is not validated",
 			email: "royce",
 			buildStub: func(dao *mock_db.MockDao) {
-				dao.EXPECT().GetUserByEmail(gomock.Any(), gomock.Eq("royce")).
-					Times(1).Return(db.User{
+				dao.EXPECT().GetUserDTOByEmail(gomock.Any(), gomock.Eq("royce")).
+					Times(1).Return(db.UserRoleView{
 					IsEmailVerified: false,
 				}, nil)
 			},
 			checkResponse: func(t *testing.T, actual error) {
-				gerr, ok := gpt_error.FromError(actual)
-				require.True(t, ok)
-				require.True(t, gerr.Is(&gpt_error.ErrInValidatePreConditionOp))
+				require.True(t, errors.Is(actual, gpt_error.ErrInValidatePreConditionOp))
 			},
 		},
 		{
 			name:  "user is not exists",
 			email: "royce",
 			buildStub: func(dao *mock_db.MockDao) {
-				dao.EXPECT().GetUserByEmail(gomock.Any(), gomock.Eq("royce")).
-					Times(1).Return(db.User{}, gpt_error.DB_ERR_NOT_FOUND)
+				dao.EXPECT().GetUserDTOByEmail(gomock.Any(), gomock.Eq("royce")).
+					Times(1).Return(db.UserRoleView{}, gpt_error.DB_ERR_NOT_FOUND)
 			},
 			checkResponse: func(t *testing.T, actual error) {
-				gerr, ok := gpt_error.FromError(actual)
-				require.True(t, ok)
-				require.True(t, gerr.Is(&gpt_error.ErrNotFound))
+				require.True(t, errors.Is(actual, gpt_error.ErrNotFound))
 			},
 		},
 		{
 			name:  "Internal error",
 			email: "royce",
 			buildStub: func(dao *mock_db.MockDao) {
-				dao.EXPECT().GetUserByEmail(gomock.Any(), gomock.Eq("royce")).
-					Times(1).Return(db.User{}, fmt.Errorf("something else"))
+				dao.EXPECT().GetUserDTOByEmail(gomock.Any(), gomock.Eq("royce")).
+					Times(1).Return(db.UserRoleView{}, fmt.Errorf("something else"))
 			},
 			checkResponse: func(t *testing.T, actual error) {
-				gerr, ok := gpt_error.FromError(actual)
-				require.True(t, ok)
-				require.True(t, gerr.Is(&gpt_error.ErrInternal))
+				require.True(t, errors.Is(actual, gpt_error.ErrInternal))
 			},
 		},
 	}
@@ -84,7 +79,7 @@ func TestIsValidateUser(t *testing.T) {
 
 		tc.buildStub(mock_dao)
 
-		userService := NewService(mock_dao)
+		userService := NewService(mock_dao, nil)
 
 		_, err := userService.IsValidateUser(context.Background(), tc.email)
 

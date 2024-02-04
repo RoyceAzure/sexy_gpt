@@ -49,6 +49,7 @@ CREATE TABLE "vertify_email" (
   "email" varchar NOT NULL,
   "secret_code" varchar NOT NULL,
   "is_used" bool NOT NULL DEFAULT false,
+  "is_validated" bool NOT NULL DEFAULT true,
   "cr_date" timestamptz NOT NULL DEFAULT (now()),
   "used_date" timestamptz,
   "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')

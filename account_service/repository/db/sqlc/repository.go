@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/gpt_error"
 	"github.com/jackc/pgx/v5"
@@ -10,7 +11,8 @@ import (
 
 type Dao interface {
 	Querier
-	CreateUserTx(context.Context, *CreateUserParams) (CreateUserTxResults, error)
+	CreateUserTx(context.Context, *CreateUserTxParms) (CreateUserTxResults, error)
+	UpdateVerifyEmailTx(ctx context.Context, arg VerifyEmailTxParams) (VerifyEmailTxResults, error)
 }
 
 type SQLDao struct {
@@ -39,7 +41,7 @@ func (dao *SQLDao) execTx(ctx context.Context, options pgx.TxOptions, fn func(*Q
 
 	if err != nil {
 		if rbErr := tx.Rollback(ctx); rbErr != nil {
-			return gpt_error.ErrInternal.Err(rbErr)
+			return fmt.Errorf("%s, %w", rbErr.Error(), gpt_error.ErrInternal)
 		}
 		return err
 	}

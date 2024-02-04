@@ -16,9 +16,12 @@ import (
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/config"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/constants"
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/mail"
+	"github.com/RoyceAzure/sexy_gpt/account_service/worker"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -68,13 +71,16 @@ func main() {
 		logger.Logger.Fatal().Err(err).Msg("err create db connect")
 	}
 
-	go runGRPCServer(config, dao)
+	w := worker.NewRedisTaskDistributor(redisOpt)
+	go runTaskProcessor(config, redisOpt, dao)
+	// go runGRPCServer(config, dao, w)
 
-	runGRPCGatewayServer(config, dao)
+	runGRPCGatewayServer(config, dao, w)
 }
 
 func runDBMigration(migrationURL string, dbSource string) {
 	migrateion, err := migrate.New(migrationURL, dbSource)
+
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -88,14 +94,14 @@ func runDBMigration(migrationURL string, dbSource string) {
 	}
 }
 
-func runGRPCServer(configs config.Config, dao db.Dao) {
+func runGRPCServer(configs config.Config, dao db.Dao, worker worker.ITaskDistributor) {
 	tokenMaker, err := token.NewPasetoMaker(configs.TokenSymmetricKey)
 	if err != nil {
 		logger.Logger.Fatal().
 			Err(err).
 			Msg("cannot create token maker")
 	}
-	userService := service.NewService(dao)
+	userService := service.NewService(dao, worker)
 
 	server, err := gapi.NewServer(configs, dao, tokenMaker, userService)
 	if err != nil {
@@ -108,7 +114,8 @@ func runGRPCServer(configs config.Config, dao db.Dao) {
 		使用 pb.RegisterStockInfoServer 函數註冊了先前創建的伺服器實例，使其能夠處理 StockInfoServer 接口的 RPC 請求。
 	*/
 	//NewServer 可以接收多個grpc.ServerOption  而上面的Interceptor 就是一個grpc.ServerOption
-	grpcServer := grpc.NewServer()
+	unaryInterceptor := grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(gapi.IdMiddleWare, gapi.GrpcLogger))
+	grpcServer := grpc.NewServer(unaryInterceptor)
 	/*
 		gRPC 中，一個 grpc.Server 可以註冊多個服務接口。
 		每個服務接口通常對應於 .proto 文件中定義的一個 service。這允許單個 gRPC 伺服器同時提供多個服務，而不需要啟動多個伺服器實例。
@@ -133,7 +140,7 @@ func runGRPCServer(configs config.Config, dao db.Dao) {
 	}
 }
 
-func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
+func runGRPCGatewayServer(configs config.Config, dao db.Dao, worker worker.ITaskDistributor) {
 	// 創建新的gRPC伺服器
 	tokenMaker, err := token.NewPasetoMaker(configs.TokenSymmetricKey)
 	if err != nil {
@@ -141,7 +148,7 @@ func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
 			Err(err).
 			Msg("cannot create token maker")
 	}
-	userService := service.NewService(dao)
+	userService := service.NewService(dao, worker)
 	server, err := gapi.NewServer(configs, dao, tokenMaker, userService)
 	if err != nil {
 		logger.Logger.Fatal().
@@ -151,7 +158,8 @@ func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
 
 	jsonOpt := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 		MarshalOptions: protojson.MarshalOptions{
-			UseProtoNames: true,
+			UseProtoNames:   true,
+			EmitUnpopulated: false,
 		},
 		UnmarshalOptions: protojson.UnmarshalOptions{
 			DiscardUnknown: true,
@@ -168,7 +176,7 @@ func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
 
 	是的，它是一個特殊的多路復用器，專為將 HTTP 請求轉換為 gRPC 請求而設計。當一個 HTTP 請求到達時，這個多路復用器會根據註冊的 gRPC 路由和方法轉換該請求，然後轉發它到對應的 gRPC 伺服器方法。
 	總之，runtime.NewServeMux() 既是一個 handler，也是一個 multiplexer，但它專為 grpc-gateway 設計，用於在 gRPC 伺服器和 HTTP 客戶端之間進行轉換和路由。*/
-	grpcMux := runtime.NewServeMux(jsonOpt)
+	grpcMux := runtime.NewServeMux(jsonOpt, runtime.WithMetadata(gapi.CustomMatcher))
 
 	// 創建一個可取消的背景上下文
 	ctx, cancel := context.WithCancel(context.Background())
@@ -218,6 +226,9 @@ func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
 	swaggerHandler := http.StripPrefix("/swagger/", fs)
 	mux.Handle("/swagger/", swaggerHandler)
 
+	loggerHandler := gapi.HttpLogger(mux)
+	handler := gapi.IdMiddleWareHandler(loggerHandler)
+
 	// 在指定地址上建立監聽
 	listener, err := net.Listen("tcp", configs.GATEWAY_ACCOUNT_SERVICE)
 	if err != nil {
@@ -228,7 +239,7 @@ func runGRPCGatewayServer(configs config.Config, dao db.Dao) {
 	logger.Logger.Info().Msgf("start HTTP gateway server at %s", listener.Addr().String())
 
 	// 啟動HTTP伺服器
-	err = http.Serve(listener, mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
 		logger.Logger.Fatal().
 			Err(err).
@@ -262,17 +273,20 @@ func initDB(ctx context.Context, dao db.Dao) error {
 
 	var user db.User
 	var err error
-	if user, err = dao.GetUserByEmail(ctx, "roycewnag@gmail.com"); err != nil {
+	if user, err = dao.GetUserByEmail(ctx, "roycewnag123@gmail.com"); err != nil {
 		pas, err := util.HashPassword("Royce123456")
 		if err != nil {
 			return err
 		}
-		_, err = dao.CreateUserTx(ctx, &db.CreateUserParams{
-			UserName:       "royce",
-			Email:          "roycewnag@gmail.com",
-			IsInternal:     true,
-			HashedPassword: pas,
-			CrUser:         "SYSTEM",
+		_, err = dao.CreateUserTx(ctx, &db.CreateUserTxParms{
+			Arg: &db.CreateUserParams{
+				UserName:       "royce",
+				Email:          "roycewnag123@gmail.com",
+				IsInternal:     true,
+				HashedPassword: pas,
+				CrUser:         "SYSTEM",
+			},
+			AfterCreate: nil,
 		})
 		if err != nil {
 			return err
@@ -289,4 +303,13 @@ func initDB(ctx context.Context, dao db.Dao) error {
 		return err
 	}
 	return nil
+}
+func runTaskProcessor(configs config.Config, redisOpt asynq.RedisClientOpt, dao db.Dao) {
+	mailer := mail.NewGmailSender(configs.EmailSenderName, configs.EmailSenderAddress, configs.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, dao, mailer)
+	log.Info().Msg("start task processor")
+	err := taskProcessor.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start task processor")
+	}
 }

@@ -3,12 +3,9 @@ package gapi
 import (
 	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
-	logger "github.com/RoyceAzure/sexy_gpt/account_service/repository/logger_distributor"
 	"github.com/RoyceAzure/sexy_gpt/account_service/service"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/config"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Server struct {
@@ -27,11 +24,4 @@ func NewServer(config config.Config, dao db.Dao, tokenMaker token.Maker, service
 		Service:    service,
 	}
 	return server, nil
-}
-
-func (server *Server) HandleAPIError(code codes.Code, err error, msg string) error {
-	if logger.Logger != nil {
-		logger.Logger.Error().Err(err).Msg(msg)
-	}
-	return status.Errorf(code, msg)
 }

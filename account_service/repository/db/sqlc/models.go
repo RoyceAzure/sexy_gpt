@@ -150,12 +150,13 @@ type UserRoleView struct {
 }
 
 type VertifyEmail struct {
-	ID         int64              `json:"id"`
-	UserID     pgtype.UUID        `json:"user_id"`
-	Email      string             `json:"email"`
-	SecretCode string             `json:"secret_code"`
-	IsUsed     bool               `json:"is_used"`
-	CrDate     time.Time          `json:"cr_date"`
-	UsedDate   pgtype.Timestamptz `json:"used_date"`
-	ExpiredAt  time.Time          `json:"expired_at"`
+	ID          int64              `json:"id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	Email       string             `json:"email"`
+	SecretCode  string             `json:"secret_code"`
+	IsUsed      bool               `json:"is_used"`
+	IsValidated bool               `json:"is_validated"`
+	CrDate      time.Time          `json:"cr_date"`
+	UsedDate    pgtype.Timestamptz `json:"used_date"`
+	ExpiredAt   time.Time          `json:"expired_at"`
 }

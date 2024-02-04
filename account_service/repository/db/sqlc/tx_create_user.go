@@ -8,20 +8,26 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type CreateUserTxParms struct {
+	Arg         *CreateUserParams
+	AfterCreate func(User) error
+}
+
 type CreateUserTxResults struct {
 	User User
 	Role Role
 }
 
-func (dao *SQLDao) CreateUserTx(ctx context.Context, parm *CreateUserParams) (CreateUserTxResults, error) {
+func (dao *SQLDao) CreateUserTx(ctx context.Context, parm *CreateUserTxParms) (CreateUserTxResults, error) {
 	var result CreateUserTxResults
+	//建立user 未commit之前  需要滿足table 外件約束 所以使用ReadUncommitted
 	err := dao.execTx(ctx, pgx.TxOptions{
-		IsoLevel:   pgx.ReadCommitted,
+		IsoLevel:   pgx.ReadUncommitted,
 		AccessMode: pgx.ReadWrite,
 	}, func(q *Queries) error {
 		var err error
 
-		result.User, err = q.CreateUser(ctx, *parm)
+		result.User, err = q.CreateUser(ctx, *parm.Arg)
 		if err != nil {
 			return err
 		}
@@ -44,6 +50,10 @@ func (dao *SQLDao) CreateUserTx(ctx context.Context, parm *CreateUserParams) (Cr
 		}
 		result.Role = role
 
+		//after create
+		if parm.AfterCreate != nil {
+			return parm.AfterCreate(result.User)
+		}
 		return nil
 	})
 	return result, err

@@ -1,18 +1,24 @@
 package service
 
-import db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
+import (
+	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
+	"github.com/RoyceAzure/sexy_gpt/account_service/worker"
+)
 
 type IService interface {
 	IUserService
 	ISessionService
+	IVertifyEmailService
 }
 
 type Service struct {
-	dao db.Dao
+	dao         db.Dao
+	asynqWorker worker.ITaskDistributor
 }
 
-func NewService(dao db.Dao) *Service {
+func NewService(dao db.Dao, asynqWorker worker.ITaskDistributor) IService {
 	return &Service{
-		dao: dao,
+		dao:         dao,
+		asynqWorker: asynqWorker,
 	}
 }

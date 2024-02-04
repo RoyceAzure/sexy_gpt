@@ -15,6 +15,12 @@ user_id = sqlc.arg(user_id)
 AND secret_code = sqlc.arg(secret_code);
 
 
+-- name: GetVertifyEmailByEmail :many
+SELECT * FROM "vertify_email"
+WHERE 
+email = sqlc.arg(email)
+AND is_validated = true;
+
 
 -- name: GetVertifyEmails :many
 SELECT * FROM "vertify_email"
@@ -26,6 +32,8 @@ OFFSET $2;
 UPDATE "vertify_email"
 SET 
     is_used = COALESCE(sqlc.narg(is_used),is_used),
+    is_validated = COALESCE(sqlc.narg(is_validated),is_validated),
     used_date = COALESCE(sqlc.narg(used_date),used_date)
+
 WHERE id = sqlc.arg(id)
 RETURNING *;

@@ -2,11 +2,11 @@ package gapi
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
-	logger "github.com/RoyceAzure/sexy_gpt/account_service/repository/logger_distributor"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/gpt_error"
@@ -18,7 +18,26 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResponse, error) {
+/*
+des:
+
+	ctx加入db message
+	將code, msg轉換成status.Errorf
+	msg 包入AuthDTOResponse
+*/
+func processAuthResponse(ctx context.Context, code codes.Code, msg string, err error) (*pb.AuthDTOResponse, error) {
+	res := pb.AuthDTOResponse{Message: msg}
+	if code != codes.OK {
+		if err == nil {
+			err = fmt.Errorf(msg)
+		}
+		util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		return &res, status.Errorf(code, msg)
+	}
+	return &res, nil
+}
+
+func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTOResponse, error) {
 	if violations := valideteLoginReq(req); violations != nil {
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
@@ -26,20 +45,18 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 	user, err := s.dao.GetUserDTOByEmail(ctx, req.GetEmail())
 	if err != nil {
 		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
-			return nil, s.HandleAPIError(codes.NotFound, err, "user not exists")
+			return processAuthResponse(ctx, codes.NotFound, "user not exists", err)
 		}
-		logger.Logger.Error().Err(err).Msg("failed to get user")
-
-		return nil, s.HandleAPIError(codes.Internal, err, "something wrong")
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
 	if !user.IsEmailVerified {
-		return nil, s.HandleAPIError(codes.PermissionDenied, err, "user email is not vertified")
+		return processAuthResponse(ctx, codes.PermissionDenied, "user email is not vertified", err)
 
 	}
 
 	if err := util.CheckPassword(req.GetPassword(), user.HashedPassword); err != nil {
-		return nil, s.HandleAPIError(codes.PermissionDenied, err, "wrong password")
+		return processAuthResponse(ctx, codes.PermissionDenied, "wrong email or password", err)
 	}
 
 	userId := user.UserID.Bytes
@@ -54,8 +71,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
 			refreshToken, refreshPayLoad, err = s.tokenMaker.CreateToken(nil, "refresh", s.config.AUTH_ISSUER, s.config.RefreshTokenDuration)
 			if err != nil {
-
-				return nil, s.HandleAPIError(codes.PermissionDenied, err, "failed to create token")
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
 			}
 
 			_, err = s.dao.CreateSession(ctx, db.CreateSessionParams{
@@ -72,7 +88,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 				},
 			})
 			if err != nil {
-				return nil, s.HandleAPIError(codes.PermissionDenied, err, "failed to create session")
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
 			}
 		} else {
 			_, err := s.dao.DeleteSession(ctx, oldSession.ID)
@@ -84,11 +100,11 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 		if time.Now().After(oldSession.ExpiredAt.Time) {
 			_, err := s.dao.DeleteSession(ctx, oldSession.ID)
 			if err != nil {
-				return nil, s.HandleAPIError(codes.Internal, err, "internal err")
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
 			}
 			refreshToken, refreshPayLoad, err := s.tokenMaker.CreateToken(nil, "refresh", s.config.AUTH_ISSUER, s.config.RefreshTokenDuration)
 			if err != nil {
-				return nil, s.HandleAPIError(codes.Internal, err, "internal err")
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
 			}
 
 			_, err = s.dao.CreateSession(ctx, db.CreateSessionParams{
@@ -105,7 +121,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 				},
 			})
 			if err != nil {
-				return nil, s.HandleAPIError(codes.PermissionDenied, err, "internal err")
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
 			}
 		}
 		refreshToken = oldSession.RefreshToken
@@ -113,18 +129,12 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.LoginResp
 
 	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, s.config.AccessTokenDuration)
 	if err != nil {
-		return nil, s.HandleAPIError(codes.PermissionDenied, err, "internal err")
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
-	res := &pb.LoginResponse{
-		Data: convertUserDTO(user),
-		TokenData: &pb.Token{
-			Audience:     accessPayLoad.Audience,
-			Issuer:       accessPayLoad.Issuer,
-			IssureAt:     timestamppb.New(accessPayLoad.IssuedAt),
-			ExpiredAt:    timestamppb.New(accessPayLoad.ExpiredAt),
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		},
+
+	res := ConvertAuthDTO("login successed", ConvertUserDTO(&user), ConvertToken(accessPayLoad, accessToken, refreshToken))
+	if err != nil {
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 	return res, nil
 }
@@ -134,10 +144,10 @@ Logout 不管執行正確性
 
 */
 
-func (s *Server) Logout(ctx context.Context, req *pb.LogoutRequset) (*pb.LogoutResponse, error) {
+func (s *Server) Logout(ctx context.Context, req *pb.LogoutRequset) (*pb.AuthDTOResponse, error) {
 	payload, err := s.authorizUser(ctx)
 	if err != nil {
-		return nil, s.HandleAPIError(codes.Unauthenticated, err, "failed to logout")
+		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
 	}
 
 	userId := payload.UserId
@@ -148,24 +158,30 @@ func (s *Server) Logout(ctx context.Context, req *pb.LogoutRequset) (*pb.LogoutR
 	})
 	if err != nil {
 		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
-			return nil, s.HandleAPIError(codes.NotFound, err, "already logout")
+			return processAuthResponse(ctx, codes.NotFound, "already logout", err)
 		}
-		return nil, s.HandleAPIError(codes.Internal, err, "failed to logout")
+		return processAuthResponse(ctx, codes.NotFound, "internal err", err)
 	} else {
 		_, err = s.dao.DeleteSession(ctx, pgtype.UUID{
 			Bytes: session.ID.Bytes,
 			Valid: true,
 		})
 		if err != nil {
-			return nil, s.HandleAPIError(codes.Internal, err, "failed to logout")
+			return processAuthResponse(ctx, codes.NotFound, "internal err", err)
 		}
 	}
-	return &pb.LogoutResponse{}, nil
+
+	res := ConvertAuthDTO("logout successed", nil, nil)
+	if err != nil {
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
+	}
+	return res, nil
 }
-func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) (*pb.RefreshTokenResponse, error) {
+
+func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) (*pb.AuthDTOResponse, error) {
 	payload, err := s.authorizUser(ctx)
 	if err != nil {
-		return nil, s.HandleAPIError(codes.Unauthenticated, err, "failed to refresh token")
+		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
 	}
 
 	session, err := s.dao.GetSessionByUserId(ctx, pgtype.UUID{
@@ -175,27 +191,23 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 
 	if err != nil || time.Now().After(session.ExpiredAt.Time) || session.IsBlocked {
 		s.dao.DeleteSession(ctx, session.ID)
-		return &pb.RefreshTokenResponse{}, status.Errorf(codes.Canceled, "please login again")
+		return processAuthResponse(ctx, codes.Unauthenticated, "please login again", err)
 	}
 
 	if session.RefreshToken != req.GetRefreshToken() {
-		return &pb.RefreshTokenResponse{}, status.Errorf(codes.Canceled, "invalid token")
+		return processAuthResponse(ctx, codes.Unauthenticated, "invalid token", err)
 	}
 
 	tokenSubject := token.NewTokenSubject(payload.Email, payload.UserId, payload.RoleId)
-	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, time.Hour*1)
+	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, s.config.AccessTokenDuration)
 	if err != nil {
-		return nil, s.HandleAPIError(codes.Internal, err, "failed to create token")
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
-	res := &pb.RefreshTokenResponse{
-		Audience:    accessPayLoad.Audience,
-		Issuer:      accessPayLoad.Issuer,
-		IssureAt:    timestamppb.New(accessPayLoad.IssuedAt),
-		ExpiredAt:   timestamppb.New(accessPayLoad.ExpiredAt),
-		AccessToken: accessToken,
+	res := ConvertAuthDTO("refresh token successed", nil, ConvertToken(accessPayLoad, accessToken, ""))
+	if err != nil {
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
-
 	return res, nil
 }
 
@@ -207,4 +219,23 @@ func valideteLoginReq(req *pb.LoginRequset) (violations []*errdetails.BadRequest
 		violations = append(violations, validate.FieldViolation("password", err))
 	}
 	return violations
+}
+
+func ConvertAuthDTO(message string, userDTO *pb.UserDTO, tokenDTO *pb.Token) *pb.AuthDTOResponse {
+	return &pb.AuthDTOResponse{
+		Message: message,
+		User:    userDTO,
+		Token:   tokenDTO,
+	}
+}
+
+func ConvertToken(token *token.TokenPayload, accessToken string, refreshToken string) *pb.Token {
+	return &pb.Token{
+		Audience:     token.Audience,
+		Issuer:       token.Issuer,
+		IssureAt:     timestamppb.New(token.IssuedAt),
+		ExpiredAt:    timestamppb.New(token.ExpiredAt),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
 }

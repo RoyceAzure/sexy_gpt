@@ -18,7 +18,7 @@ INSERT INTO "vertify_email"(
     secret_code
 ) VALUES(
     $1,$2,$3
-) RETURNING id, user_id, email, secret_code, is_used, cr_date, used_date, expired_at
+) RETURNING id, user_id, email, secret_code, is_used, is_validated, cr_date, used_date, expired_at
 `
 
 type CreateVertifyEmailParams struct {
@@ -36,6 +36,7 @@ func (q *Queries) CreateVertifyEmail(ctx context.Context, arg CreateVertifyEmail
 		&i.Email,
 		&i.SecretCode,
 		&i.IsUsed,
+		&i.IsValidated,
 		&i.CrDate,
 		&i.UsedDate,
 		&i.ExpiredAt,
@@ -43,8 +44,45 @@ func (q *Queries) CreateVertifyEmail(ctx context.Context, arg CreateVertifyEmail
 	return i, err
 }
 
+const getVertifyEmailByEmail = `-- name: GetVertifyEmailByEmail :many
+SELECT id, user_id, email, secret_code, is_used, is_validated, cr_date, used_date, expired_at FROM "vertify_email"
+WHERE 
+email = $1
+AND is_validated = true
+`
+
+func (q *Queries) GetVertifyEmailByEmail(ctx context.Context, email string) ([]VertifyEmail, error) {
+	rows, err := q.db.Query(ctx, getVertifyEmailByEmail, email)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []VertifyEmail{}
+	for rows.Next() {
+		var i VertifyEmail
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Email,
+			&i.SecretCode,
+			&i.IsUsed,
+			&i.IsValidated,
+			&i.CrDate,
+			&i.UsedDate,
+			&i.ExpiredAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getVertifyEmailByUserIdAndCode = `-- name: GetVertifyEmailByUserIdAndCode :one
-SELECT id, user_id, email, secret_code, is_used, cr_date, used_date, expired_at FROM "vertify_email"
+SELECT id, user_id, email, secret_code, is_used, is_validated, cr_date, used_date, expired_at FROM "vertify_email"
 WHERE 
 user_id = $1
 AND secret_code = $2
@@ -64,6 +102,7 @@ func (q *Queries) GetVertifyEmailByUserIdAndCode(ctx context.Context, arg GetVer
 		&i.Email,
 		&i.SecretCode,
 		&i.IsUsed,
+		&i.IsValidated,
 		&i.CrDate,
 		&i.UsedDate,
 		&i.ExpiredAt,
@@ -72,7 +111,7 @@ func (q *Queries) GetVertifyEmailByUserIdAndCode(ctx context.Context, arg GetVer
 }
 
 const getVertifyEmails = `-- name: GetVertifyEmails :many
-SELECT id, user_id, email, secret_code, is_used, cr_date, used_date, expired_at FROM "vertify_email"
+SELECT id, user_id, email, secret_code, is_used, is_validated, cr_date, used_date, expired_at FROM "vertify_email"
 ORDER BY user_id
 LIMIT $1
 OFFSET $2
@@ -98,6 +137,7 @@ func (q *Queries) GetVertifyEmails(ctx context.Context, arg GetVertifyEmailsPara
 			&i.Email,
 			&i.SecretCode,
 			&i.IsUsed,
+			&i.IsValidated,
 			&i.CrDate,
 			&i.UsedDate,
 			&i.ExpiredAt,
@@ -116,19 +156,27 @@ const updateVertifyEmail = `-- name: UpdateVertifyEmail :one
 UPDATE "vertify_email"
 SET 
     is_used = COALESCE($1,is_used),
-    used_date = COALESCE($2,used_date)
-WHERE id = $3
-RETURNING id, user_id, email, secret_code, is_used, cr_date, used_date, expired_at
+    is_validated = COALESCE($2,is_validated),
+    used_date = COALESCE($3,used_date)
+
+WHERE id = $4
+RETURNING id, user_id, email, secret_code, is_used, is_validated, cr_date, used_date, expired_at
 `
 
 type UpdateVertifyEmailParams struct {
-	IsUsed   pgtype.Bool        `json:"is_used"`
-	UsedDate pgtype.Timestamptz `json:"used_date"`
-	ID       int64              `json:"id"`
+	IsUsed      pgtype.Bool        `json:"is_used"`
+	IsValidated pgtype.Bool        `json:"is_validated"`
+	UsedDate    pgtype.Timestamptz `json:"used_date"`
+	ID          int64              `json:"id"`
 }
 
 func (q *Queries) UpdateVertifyEmail(ctx context.Context, arg UpdateVertifyEmailParams) (VertifyEmail, error) {
-	row := q.db.QueryRow(ctx, updateVertifyEmail, arg.IsUsed, arg.UsedDate, arg.ID)
+	row := q.db.QueryRow(ctx, updateVertifyEmail,
+		arg.IsUsed,
+		arg.IsValidated,
+		arg.UsedDate,
+		arg.ID,
+	)
 	var i VertifyEmail
 	err := row.Scan(
 		&i.ID,
@@ -136,6 +184,7 @@ func (q *Queries) UpdateVertifyEmail(ctx context.Context, arg UpdateVertifyEmail
 		&i.Email,
 		&i.SecretCode,
 		&i.IsUsed,
+		&i.IsValidated,
 		&i.CrDate,
 		&i.UsedDate,
 		&i.ExpiredAt,

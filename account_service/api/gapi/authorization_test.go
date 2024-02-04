@@ -2,7 +2,7 @@ package gapi
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -11,6 +11,7 @@ import (
 	mock_service "github.com/RoyceAzure/sexy_gpt/account_service/service/mock"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/model"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/config"
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/gpt_error"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -34,6 +35,8 @@ func TestAuthorizUser(t *testing.T) {
 		{
 			name: "ok",
 			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(1).
+					Return(true, nil)
 				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(1).
 					Return(&db.UserRoleView{}, nil)
 			},
@@ -52,6 +55,7 @@ func TestAuthorizUser(t *testing.T) {
 		{
 			name: "misssing metadata",
 			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(0)
 				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(0)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker, audience string, issuer string, duration time.Duration) context.Context {
@@ -60,12 +64,13 @@ func TestAuthorizUser(t *testing.T) {
 			checkResponse: func(t *testing.T, res *model.AuthUser, err error) {
 				require.Error(t, err)
 				require.Nil(t, res)
-				require.Equal(t, fmt.Errorf("misssing metadata"), err)
+				require.True(t, errors.Is(err, gpt_error.ErrUnauthicated))
 			},
 		},
 		{
 			name: "invaliad access token",
 			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(0)
 				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(0)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker, audience string, issuer string, duration time.Duration) context.Context {
@@ -76,6 +81,55 @@ func TestAuthorizUser(t *testing.T) {
 			checkResponse: func(t *testing.T, res *model.AuthUser, err error) {
 				require.Error(t, err)
 				require.Nil(t, res)
+				require.True(t, errors.Is(err, gpt_error.ErrUnauthicated))
+			},
+		},
+		{
+			name: "user not found",
+			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(0)
+				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(1).
+					Return(nil, gpt_error.ErrNotFound)
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker, audience string, issuer string, duration time.Duration) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, subject, audience, issuer, duration)
+			},
+			checkResponse: func(t *testing.T, res *model.AuthUser, err error) {
+				require.Error(t, err)
+				require.Nil(t, res)
+				require.True(t, errors.Is(err, gpt_error.ErrNotFound))
+			},
+		},
+		{
+			name: "user not validated email",
+			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(0)
+				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(1).
+					Return(nil, gpt_error.ErrUnauthicated)
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker, audience string, issuer string, duration time.Duration) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, subject, audience, issuer, duration)
+			},
+			checkResponse: func(t *testing.T, res *model.AuthUser, err error) {
+				require.Error(t, err)
+				require.Nil(t, res)
+				require.True(t, errors.Is(err, gpt_error.ErrUnauthicated))
+			},
+		},
+		{
+			name: "user session invalidated",
+			buildStub: func(service *mock_service.MockIService) {
+				service.EXPECT().IsUserLogin(gomock.Any(), gomock.Any()).Times(0)
+				service.EXPECT().IsValidateUser(gomock.Any(), gomock.Eq(email)).Times(1).
+					Return(nil, gpt_error.ErrInvalidSession)
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker, audience string, issuer string, duration time.Duration) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, subject, audience, issuer, duration)
+			},
+			checkResponse: func(t *testing.T, res *model.AuthUser, err error) {
+				require.Error(t, err)
+				require.Nil(t, res)
+				require.True(t, errors.Is(err, gpt_error.ErrInvalidSession))
 			},
 		},
 	}

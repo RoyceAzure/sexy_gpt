@@ -30,6 +30,7 @@ type Querier interface {
 	GetUserRoles(ctx context.Context, arg GetUserRolesParams) ([]UserRole, error)
 	GetUsers(ctx context.Context, arg GetUsersParams) ([]User, error)
 	GetUsersDTO(ctx context.Context, arg GetUsersDTOParams) ([]UserRoleView, error)
+	GetVertifyEmailByEmail(ctx context.Context, email string) ([]VertifyEmail, error)
 	GetVertifyEmailByUserIdAndCode(ctx context.Context, arg GetVertifyEmailByUserIdAndCodeParams) (VertifyEmail, error)
 	GetVertifyEmails(ctx context.Context, arg GetVertifyEmailsParams) ([]VertifyEmail, error)
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)

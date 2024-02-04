@@ -11,8 +11,10 @@ import (
 
 type ISessionService interface {
 	/*
-		des: 檢查User session狀態是否正常
-		parm: usersId
+		des:
+			檢查User session狀態是否正常
+		parm:
+			usersId
 		errors:
 			ErrInvalidSession : session不存在, session過期, session被block, 需要重新登入
 			ErrInternal : 未預期錯誤

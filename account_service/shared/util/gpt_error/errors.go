@@ -8,77 +8,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type gError struct {
-	Type    string
-	Code    int
-	Message string
-}
-
-func NewGerror(code int, msg string) gError {
-	return gError{
-		Code:    code,
-		Message: msg,
-	}
-}
-
-func FromError(err error) (*gError, bool) {
-	if err == nil {
-		return nil, true
-	}
-
-	if ge, ok := err.(gError); ok {
-		temp := NewGerror(ge.Code, ge.Message)
-		return &temp, true
-	}
-	return nil, false
-}
-
-func (g gError) Err(err error) gError {
-	msg := g.Message + "," + err.Error()
-	return gError{
-		Code:    g.Code,
-		Message: msg,
-	}
-}
-
-func (g gError) ErrStr(err string) gError {
-	msg := g.Message + "," + err
-	return gError{
-		Code:    g.Code,
-		Message: msg,
-	}
-}
-
-func (g gError) Error() string {
-	return g.Message
-}
-
-func (g gError) Is(err *gError) bool {
-	return g.Code == err.Code
-}
-
-const (
-	NotFound           = 404
-	InvalidArgument    = 400
-	Unauthenticated    = 401
-	PreConditionFailed = 412
-	InternalError      = 500
-	Unavailable        = 503
+var (
+	ErrInValidatePreConditionOp = errors.New("invalidated pre conditional op err")
+	ErrUnauthicated             = errors.New("unauthicated err")
+	ErrInternal                 = errors.New("internal err")
+	ErrInvalidArgument          = errors.New("invalid argument err")
+	ErrNotFound                 = errors.New("not found err")
+	ErrUnavailable              = errors.New("service unavailable err")
+	ErrInvalidSession           = errors.New("session invalidated")
 )
 
 var (
-	ErrInValidatePreConditionOp = NewGerror(PreConditionFailed, "invalidated pre conditional op err")
-	ErrInternal                 = NewGerror(InternalError, "imternal err")
-	ErrInvalidArgument          = NewGerror(InvalidArgument, "invalid argument err")
-	ErrNotFound                 = NewGerror(NotFound, "not found err")
-	ErrUnavailable              = NewGerror(Unavailable, "service unavailable err")
-	ErrInvalidSession           = NewGerror(Unauthenticated, "session invalidated")
-)
-
-var (
-	ErrUserNotEsixts   = errors.New("user not exists or invalid password")
-	ErrInvalidPassword = errors.New("wrong password")
-	DB_ERR_NOT_FOUND   = errors.New("no rows in result set")
+	DB_ERR_NOT_FOUND = errors.New("no rows in result set")
 )
 
 const (
@@ -131,7 +72,7 @@ func APIInternalError(err error) error {
 
 func APIInValidateOperation(err error) error {
 	if err == nil {
-		return status.Error(codes.Unauthenticated, "")
+		return status.Error(codes.FailedPrecondition, "")
 	}
 	return status.Error(codes.FailedPrecondition, err.Error())
 }

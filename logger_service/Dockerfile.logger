@@ -12,5 +12,5 @@ COPY app.env .
 
 ENV MONGODB_ADDRESS=mongodb://mongo:27017
 ENV REDIS_Q_ADDRESS=redis-asynq:6379
-ENV SERVICEID=logger
+ENV SERVICEID=logger_service
 CMD ["/app/main"]

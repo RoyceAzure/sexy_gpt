@@ -65,3 +65,17 @@ func (mr *MockIServiceMockRecorder) IsValidateUser(arg0, arg1 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsValidateUser", reflect.TypeOf((*MockIService)(nil).IsValidateUser), arg0, arg1)
 }
+
+// SendVertifyEmail mocks base method.
+func (m *MockIService) SendVertifyEmail(arg0 context.Context, arg1 uuid.UUID, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendVertifyEmail", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendVertifyEmail indicates an expected call of SendVertifyEmail.
+func (mr *MockIServiceMockRecorder) SendVertifyEmail(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendVertifyEmail", reflect.TypeOf((*MockIService)(nil).SendVertifyEmail), arg0, arg1, arg2)
+}
