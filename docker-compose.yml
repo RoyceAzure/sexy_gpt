@@ -1,0 +1,65 @@
+version: '3.9'
+services:
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=royce
+      - POSTGRES_PASSWORD=royce
+      - POSTGRES_DB=sexy_gpt
+    ports:
+      - "5432:5432"
+    volumes:
+      - sexy_gpt_ps_volume:/var/lib/postgresql/data
+    # command: ["sh", "/docker-entrypoint-initdb.d/init-db.sh"]
+
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - sexy_gpt_mongo_volume:/data/db
+
+  redis-asynq:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  account-service:
+    build:
+      context: ./account_service
+      dockerfile: Dockerfile.account
+    environment:
+      - DB_SOURCE=postgres://royce:royce@postgres:5432/sexy_gpt?sslmode=disable
+      - MONGODB_ADDRESS=mongodb://mongo:27017
+      - REDIS_Q_ADDRESS=redis-asynq:6379
+      - SERVICEID=account_service_01
+    ports:
+      - "8081:8081"
+      - "9091:9091"
+    depends_on:
+      - postgres
+      - logger-service
+    # command: ["/app/main"]
+    command: ["sh","/app/wait-for.sh","postgres:5432", "--","/app/main"]
+
+  logger-service:
+    build:
+      context: ./logger_service
+      dockerfile: Dockerfile.logger
+    environment:
+      - MONGODB_ADDRESS=mongodb://mongo:27017
+      - REDIS_Q_ADDRESS=redis-asynq:6379
+      - SERVICEID=logger_serrvice_01
+    depends_on:
+      - mongo
+      - redis-asynq
+    command: ["/app/main"]
+
+volumes:
+  sexy_gpt_ps_volume:
+  sexy_gpt_mongo_volume:

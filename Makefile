@@ -1,0 +1,6 @@
+current_dir = $(shell echo %cd%)
+test:
+	go test -v -cover -short ./account_service/...
+	go test -v -cover -short ./logger_service/...
+
+.PHONY:	 test

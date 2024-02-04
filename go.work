@@ -1,5 +1,6 @@
 go 1.21.3
 
 use(
-    ./AccountService
+    ./account_service
+    ./logger_service
 )

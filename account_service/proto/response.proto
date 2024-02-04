@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pb;
+import "google/api/any.proto";
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/account_service/shared/pb";
+
+
+message Responses{
+    string message = 2;
+    repeated google.protobuf.Any data = 3;
+}
+message Response{
+    string message = 2;
+    google.protobuf.Any data = 3;
+}
+
+

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package pb;
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/account_service/shared/pb";
+
+
+message SendVertifyEmailRequset{
+    string email=1;
+}
+
+message VertifyEmailRequset{
+    string user_id=1;
+    string secret_code=2;
+}
+
+message VertifyEmailResponse{
+    string message=1;
+}
