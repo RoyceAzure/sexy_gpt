@@ -48,6 +48,8 @@ This guide outlines the steps necessary to start the application using Docker an
       ```python
       pip install -r requirements.txt
       ```
+    - Config env:
+      create .env file and add OPENAI_API_KEY={your openai_api_key}
     - Run the application:
       ```
       python app.py
