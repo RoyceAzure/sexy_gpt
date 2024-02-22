@@ -97,7 +97,7 @@ def free_chat():
     if wrap_agent_excutor is None:
         return {
             "code" : 403,
-            "message" : "session 不存在，請從新建立session"
+            "message" : "session不存在，請重新建立session"
         }
     
     wrap_agent_excutor.set_tools(tools)
