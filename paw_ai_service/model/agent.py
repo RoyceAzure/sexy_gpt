@@ -1,4 +1,4 @@
-from langchain.agents import OpenAIFunctionsAgent, AgentExecutor
+from langchain.agents import create_openai_functions_agent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from datetime import datetime
 from chatconfig.config_manager import ConfigManager
@@ -22,9 +22,6 @@ class WrapAgent:
         self._cr_time = cr_time
         self._up_time = cr_time
         
-    def set_tools(self, tools):
-        self._agent.tools = tools
-        self._agent_excutor.tools = tools
         
     def set_up_time(self, up_time):
         self._up_time = up_time
@@ -38,7 +35,7 @@ class WrapAgent:
     def chat_with_agent(self, msg):
         if self._is_agent_expired():
             self._memory.clear()
-        return self._agent_excutor.invoke(msg)
+        return self._agent_excutor.invoke({"input":msg})
         
 
 
@@ -53,7 +50,7 @@ class AgentFactory:
         """
         
         if memory is None:
-            memory = ConversationBufferMemory(memory_key=session_id, return_messages=True)
+            memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
             
         agent, agent_executor = AgentFactory.create_agent_excutor(llm, prompt, tools, memory)
         wrap_agent = WrapAgent(agent, agent_executor, memory, datetime.utcnow())
@@ -106,11 +103,16 @@ class AgentFactory:
         Returns:
             AgentExecutor: _description_
         """
-        agent = OpenAIFunctionsAgent(
+        agent = create_openai_functions_agent(
             llm=llm,
             prompt=prompt,
             tools=tools
         )
+
+        """
+        memory應該是用來保存AI Message type的資料
+
+        """
         agent_executor = AgentExecutor(
             agent=agent,
             verbose=True,

@@ -1,8 +1,8 @@
 import uuid
 from flask import Blueprint, jsonify
 from flask import request
-from db.database import Repository
-from model.chat_tools import DB_Tools
+from db.database import Repository, SQLAlchemyConnFactory
+from model.chat_tools import DB_Tools, SQLAlchemyTools
 from model.openail_model import ChatModelFactory
 from langchain.memory import ConversationBufferMemory
 from model.agent import AgentFactory, SingleTonAgenFactory
@@ -30,7 +30,8 @@ def chat_users():
         return {"message": "Invalid input", "errors": err.messages}, 400
     
     ques = req['question']
-    conn = Repository.get_scoped_db("paw.db")
+    sql_factory = SQLalchemyConnFactory()
+    engine = sql_factory.get_singleton_conn("sqlite:///example.db")
     dbTolls = DB_Tools(conn)
     tools = dbTolls.Getdbtools()
     llm = ChatModelFactory.get_singleton_model()
@@ -56,8 +57,14 @@ def init_chat():
     llm = ChatModelFactory.get_openai_model()
     uuid_str = str(uuid.uuid4())
     prompt = PromptFactory.create_chat_prompt(memory_id = uuid_str)
+    
+    sql_factory = SQLAlchemyConnFactory()
+    engine = sql_factory.get_singleton_conn("sqlite:///paw.db")
+    dbTolls = SQLAlchemyTools(engine)
+    tools = dbTolls.get_db_dools()
+    
     agent_factory = SingleTonAgenFactory.get_singleton_agent_factory()
-    agent_factory.init_wrap_agent(uuid_str, llm, prompt)
+    agent_factory.init_wrap_agent(uuid_str, llm, prompt, tools=tools)
     
     response = {
         "code" : 202,
@@ -87,11 +94,7 @@ def free_chat():
     session_id = req['session_id']
     ques = req['question']
     
-    conn = Repository.get_scoped_db("paw.db")
-    dbTolls = DB_Tools(conn)
-    tools = dbTolls.Getdbtools()
-    
-    
+
     agent_factory = SingleTonAgenFactory.get_singleton_agent_factory()
     wrap_agent_excutor = agent_factory.get_agent(session_id)
     if wrap_agent_excutor is None:
@@ -100,7 +103,6 @@ def free_chat():
             "message" : "session不存在，請重新建立session"
         }
     
-    wrap_agent_excutor.set_tools(tools)
     result = wrap_agent_excutor.chat_with_agent(ques)
 
     response = {
