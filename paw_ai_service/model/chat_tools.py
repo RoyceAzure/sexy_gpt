@@ -1,9 +1,45 @@
 import sqlite3
 from abc import ABC, abstractmethod
 from sqlalchemy import inspect, text
-from langchain.tools import Tool
+from langchain.tools import Tool, tool
 from pydantic.v1 import BaseModel
 from typing import List
+
+
+
+
+
+
+@tool("get_example_tool", return_direct=False)    
+def get_sql_exmples():
+    """Get examples of user questersions and how to query via run_sqlite_query function"""
+    return """
+            {"questersion": "列出所有帕魯的名稱", "query": "SELECT name FROM paw_id_name; "},
+            {
+                "questersion": "列出可以生出翠葉鼠的所有父母組合",
+                "query": "SELECT parent1, parent2 FORM breed WHERE child='翠葉鼠' GROUP BY parent1, parent2;",
+            },
+            {
+                "questersion": "我想要生出 企丸王，有哪些父母的組合?",
+                "query": "SELECT parent1, parent2 FORM breed WHERE child='企丸王' GROUP BY parent1, parent2;",
+            },
+            {
+                "questersion": "列出所有棉悠悠可以生出的後代",
+                "query": "SELECT child FROM breed WHERE parent1='棉悠悠';",
+            },
+            {
+                "questersion": "我手上有一隻葉泥泥，我要怎生出勾魂魷?",
+                "query": "SELECT parent2 FROM breed WHERE (parent1='葉泥泥' OR parent2='葉泥泥') AND child = '勾魂魷';",
+            },
+            {
+                "questersion": "伏特喵 跟 瞅什魔 交配可以得到甚麼?",
+                "query": "SELECT child FROM breed WHERE parent1='伏特喵' AND parent2 = '瞅什魔';",
+            },
+            {
+                "questersion": "燎火鹿可以配種出花冠龍嗎?",
+                "query": "SELECT * FROM breed WHERE parent1='燎火鹿' AND child='花冠龍';",
+            }
+            """
 
 
 
@@ -71,6 +107,6 @@ class SQLAlchemyTools(DB_Tools):
             args_schema=DescribeTablesArgsSchema
         )
         
-        return [run_query_tool, describe_tables_tool]   
+        return [run_query_tool, describe_tables_tool, get_sql_exmples]   
     
     
