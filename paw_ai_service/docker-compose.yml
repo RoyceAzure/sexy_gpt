@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  pawai-service:
+    build:
+      context: .
+      dockerfile: pawai.DockerFile
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    # command: ["/app/main"]
+    command: ["python", "app.py"]
+
+volumes:
+  sexy_gpt_ps_volume:
+  sexy_gpt_mongo_volume:
