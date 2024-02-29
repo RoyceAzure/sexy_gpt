@@ -14,11 +14,13 @@ class QuesSchema(ma.Schema):
     subject_id = ma.List(ma.Str())  # 字符串字段，用於儲存主題的 ID。
     report = ma.List(ma.Nested(ReportSchema))  # 使用 ma.List 來定義一個列表，列表中的每個元素都由 ReportSchema 定義。
 # 定義一個名為 QuesSchema 的 Schema，For Freetalk。
+
+class FreetalkNoMemorySchema(ma.Schema):
+    question = ma.Str(required=True)
+
 class FreetalkSchema(ma.Schema):
     session_id = ma.Str(required=True)
-    question = ma.Str()  # 字符串字段，用於儲存主題的 ID。
-    # report = ma.List(ma.Nested(ReportSchema))  # 使用 ma.List 來定義一個列表，列表中的每個元素都由 ReportSchema 定義。
-# 定義一個名為 StatusSchema 的 Schema，這個 Schema 包含了一個整數字段和一個字符串字段。
+    question = ma.Str()
 class StatusSchema(ma.Schema):
     code = ma.Int()    # 整數字段，用於儲存狀態碼。
     message = ma.Str()  # 字符串字段，用於儲存相關的消息或描述。

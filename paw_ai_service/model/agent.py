@@ -3,6 +3,12 @@ from langchain.memory import ConversationBufferMemory
 from datetime import datetime
 from chatconfig.config_manager import ConfigManager
 import threading
+from langchain_openai import ChatOpenAI
+from model.memory import build_memory
+from langchain.prompts import ChatPromptTemplate
+from langchain.tools import Tool
+
+
 
 class SingleTonAgenFactory:
     _instance = None
@@ -12,6 +18,31 @@ class SingleTonAgenFactory:
         if cls._instance is None:
             cls._instance = AgentFactory()
         return cls._instance 
+
+class ChatArgs:
+    """
+    conversation_id : session_id
+    
+    use_memory: 是否使用memory
+    
+    expired_time : redis key 過期時間，單位是秒
+    """
+    def __init__(self, llm:ChatOpenAI, 
+                 prompt:ChatPromptTemplate, 
+                 session_id :str ,
+                 expired_time: int,
+                 streaming:bool, 
+                 use_memory : bool, 
+                 tool : Tool = []):
+        self.llm = llm
+        self.prompt = prompt
+        self.conversation_id = session_id
+        self.streaming = streaming
+        self.use_memory = use_memory
+        self.expired_time = expired_time
+        self.tools = tool
+        
+
 
 
 class WrapAgent:
@@ -57,6 +88,14 @@ class AgentFactory:
         with self.lock:
             self._objects[session_id] = wrap_agent
         
+
+    def build_agent_excutor(self, chatArgs:ChatArgs):
+        memory = None
+        if chatArgs.conversation_id is not None:
+            memory = build_memory(chatArgs.conversation_id, chatArgs.expired_time)
+        agent, agent_executor = AgentFactory.create_agent_excutor(chatArgs.llm, chatArgs.prompt, chatArgs.tools, memory)
+        wrap_agent = WrapAgent(agent, agent_executor, memory, datetime.utcnow())
+        return wrap_agent
 
     def get_agent(self, id) -> WrapAgent:
         """
