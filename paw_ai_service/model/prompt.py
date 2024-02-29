@@ -57,21 +57,21 @@ class PromptFactory:
         prompt = ChatPromptTemplate(
             messages=[
                 SystemMessage(content=(
-                    "你擁有access db的能力，如果user詢問跟db相關的問題，請執行SQL指令去DB撈取資料並回復 "
-        #             f"目前的table如下: {tables}\n"
-                    "若要查詢帕魯的ID，請去paw_id_name table查詢"
-                    "若要查詢配種資料，請去breed table查詢 "
-                    "SQL查詢出來的資料不一定就是答案，請在對資料內容作分析，再回答問題 "
-                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
+                    "如果使用者問題是跟帕魯相關的，請確實使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答"
+                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢"
+                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "請不要自己生成答案 "
+                    "若要查詢帕魯的ID，請去paw_id_name table查詢 "
+                    "若要查詢配種資料，請去breed table查詢 "
                     "如果是配種相關問題，可能會需要多個配種步驟來得到答案 "
                     "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
                     "确保只返回与问题直接相关的数据。在使用工具时 确保只返回与问题直接相关的数据。在使用工具时，必须遵循操作规范，避免执行可能改变数据库状态的操作（如插入、更新、删除等）。"
                     "若问题与数据库内容无关，则直接回答“我不知道” 不要自己生成答案"
                     "回復請用中文。"
-                    "下面是一些問題示例及其對應的答案。"
+                    "下面是一些問題示例以及該問題應該要使用的SQL查詢。"
                 )),
-                few_shot_prompt,
                 MessagesPlaceholder(variable_name="chat_history"),
                 HumanMessagePromptTemplate.from_template("{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -84,19 +84,12 @@ class PromptFactory:
         prompt = ChatPromptTemplate(
             messages=[
                 SystemMessage(content=(
-                    "你擁有access db的能力，如果user詢問跟db相關的問題，請執行SQL指令去DB撈取資料並回復 "
-        #             f"目前的table如下: {tables}\n"
-                    "若要查詢帕魯的ID，請去paw_id_name table查詢"
-                    "若要查詢配種資料，請去breed table查詢 "
-                    "SQL查詢出來的資料不一定就是答案，請在對資料內容作分析，再回答問題 "
-                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
-                    "如果是配種相關問題，可能會需要多個配種步驟來得到答案 "
-                    "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
-                    "确保只返回与问题直接相关的数据。在使用工具时 确保只返回与问题直接相关的数据。在使用工具时，必须遵循操作规范，避免执行可能改变数据库状态的操作（如插入、更新、删除等）。"
-                    "若问题与数据库内容无关，则直接回答“我不知道” 不要自己生成答案"
-                    "回復請用中文。"
-                    "下面是一些問題示例及其對應的答案。"
+                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢 "
+                    "請跟據使用者提出的問題來修改Query的參數，不要照抄範例的Query "
+                    "再使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答 "
+                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
                 )),
                 HumanMessagePromptTemplate.from_template("{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -136,20 +129,19 @@ class PromptFactory:
             ChatPromptTemplate: SystemMessage
         """
         return SystemMessage(content=(
-                    "你主要任务是根据用户提出的问题，然後去查找DB內的兩個table資料，並根據查詢出來的資料做回覆 "
-                    "SQL查詢出來的資料不一定就是答案，請在對資料內容作分析，再回答問題 "
-                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
-                    "請不要根據歷史訊息做回覆，每次回答都要執行SQL查詢語法 "
-                    # f"目前的table如下: {tables}\n"
-                    "請先使用'list_tables' function 查看當前table資訊"
-                    "若要查詢帕魯的ID，請去paw_id_name table查詢"
-                    "若要查詢配種資料，請去breed table查詢 "
+                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
+                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢"
+                    "如果使用者問題是跟帕魯相關的，請確實使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答"
+                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "請不要自己生成答案 "
+                    "若要查詢帕魯的ID，請去paw_id_name table查詢 "
+                    "若要查詢配種資料，請去breed table查詢 "
                     "如果是配種相關問題，可能會需要多個配種步驟來得到答案 "
-                    "如果遇到 no such column 錯誤，請先使用'describe_tables' function 查詢欄位 "
+                    "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
                     "确保只返回与问题直接相关的数据。在使用工具时 确保只返回与问题直接相关的数据。在使用工具时，必须遵循操作规范，避免执行可能改变数据库状态的操作（如插入、更新、删除等）。"
                     "若问题与数据库内容无关，则直接回答“我不知道” 不要自己生成答案"
                     "回復請用中文。"
-                    "下面是一些問題示例及其對應的答案。"
+                    "下面是一些問題示例以及該問題應該要使用的SQL查詢。"
                 ))
             
