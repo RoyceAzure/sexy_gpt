@@ -77,7 +77,9 @@ class SQLAlchemyTools(DB_Tools):
                     return result.fetchall()
             except Exception as err:
                 return f"The following error occurred: {str(err)}"
-            
+    
+
+class SQLAlchemy_Sqllite_Tools(SQLAlchemyTools):  
     def _describe_tables(self, table_names):
         try:
             with self.__engine.connect() as c:
@@ -86,6 +88,63 @@ class SQLAlchemyTools(DB_Tools):
                 dbResultStr = "\n".join(row[0] for row in result if row[0] is not None)
                 template = (
                     f"{dbResultStr}\n  以上你看到的就是所有table schema，"
+                    "'breed': 描述 : 表格為一種名為'帕魯'生物的配種表 "
+                    "'fertility': 表格內容是各種怕魯的繁殖力 "
+                )
+                return template
+        except Exception as err:
+            return f"The following error occurred: {str(err)}"
+        
+    def get_db_dools(self): 
+        class RunQueryArgsSchema(BaseModel):
+            query: str
+        class DescribeTablesArgsSchema(BaseModel):
+            tables_names: List[str]
+            
+        run_query_tool = Tool.from_function(
+            name="run_sqlite_query",
+            description="Run a sqlite query.",
+            func=self._run_sqlite_query,
+            args_schema=RunQueryArgsSchema
+        )
+        describe_tables_tool = Tool.from_function(
+            name="describe_tables",
+            description="Given a list of table names, returns the schema of those tables",
+            func=self._describe_tables,
+            args_schema=DescribeTablesArgsSchema
+        )
+        
+        return [run_query_tool, describe_tables_tool, get_sql_exmples]   
+
+
+
+
+    
+    
+class SQLAlchemy_Postgres_Tools(SQLAlchemyTools):  
+    def _describe_tables(self, table_names):
+        try:
+            with self.__engine.connect() as c:
+                # 準備表名條件字符串
+                tables = ", ".join("'" + table + "'" for table in table_names)
+                # PostgreSQL 查詢，獲取表結構
+                query = text(f"""
+                    SELECT table_name, column_name, data_type 
+                    FROM information_schema.columns 
+                    WHERE table_name IN ({tables}) 
+                    ORDER BY table_name, ordinal_position;
+                """)
+                result = c.execute(query)
+                # 組裝結果字符串
+                dbResultStr = ""
+                current_table = ""
+                for row in result:
+                    if row['table_name'] != current_table:
+                        dbResultStr += f"\nTable '{row['table_name']}':\n"
+                        current_table = row['table_name']
+                    dbResultStr += f"  {row['column_name']} ({row['data_type']})\n"
+                template = (
+                    f"{dbResultStr}\n以上你看到的就是所有table schema，"
                     "'breed': 描述 : 表格為一種名為'帕魯'生物的配種表 "
                     "'fertility': 表格內容是各種怕魯的繁殖力 "
                 )

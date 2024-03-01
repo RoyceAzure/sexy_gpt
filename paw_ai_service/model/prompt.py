@@ -36,41 +36,37 @@ class PromptFactory:
 
     @staticmethod
     def create_chat_prompt() -> ChatPromptTemplate:
-        
-        examples = [
-            {
-                "input": "我手上只有企丸丸跟波霸牛，我要如何得到葉泥泥?",
-                "output": "1. 企丸丸和波霸牛交配得到草莽豬 2. 再將企丸丸和草莽豬配對，就可以得到葉泥泥。"
-            },
-        ]
+        # examples = [
+        #     {
+        #         "input": "我手上只有企丸丸跟波霸牛，我要如何得到葉泥泥?",
+        #         "output": "1. 企丸丸和波霸牛交配得到草莽豬 2. 再將企丸丸和草莽豬配對，就可以得到葉泥泥。"
+        #     },
+        # ]
 
-        example_prompt = ChatPromptTemplate.from_messages(
-            [('human', '{input}'), ('ai', '{output}')]
-        )
+        # example_prompt = ChatPromptTemplate.from_messages(
+        #     [('human', '{input}'), ('ai', '{output}')]
+        # )
 
-        few_shot_prompt = FewShotChatMessagePromptTemplate(
-            examples=examples,
-            example_prompt=example_prompt,
-        )
-        
+        # few_shot_prompt = FewShotChatMessagePromptTemplate(
+        #     examples=examples,
+        #     example_prompt=example_prompt,
+        # )
                 
         prompt = ChatPromptTemplate(
             messages=[
                 SystemMessage(content=(
-                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
+                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料，查詢時請使用中文當作參數查詢 "
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
-                    "如果使用者問題是跟帕魯相關的，請確實使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答"
-                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢"
-                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
-                    "請不要自己生成答案 "
+                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢 "
+                    "請跟據使用者提出的問題來修改Query的參數，不要照抄範例的Query "
+                    "再使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答 "
+                    "除非使用者要求'我要全部的資料'，否則執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
                     "若要查詢帕魯的ID，請去paw_id_name table查詢 "
                     "若要查詢配種資料，請去breed table查詢 "
-                    "如果是配種相關問題，可能會需要多個配種步驟來得到答案 "
+                    "若要查詢繁殖力資料，請去fertility table查詢 "
                     "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
-                    "确保只返回与问题直接相关的数据。在使用工具时 确保只返回与问题直接相关的数据。在使用工具时，必须遵循操作规范，避免执行可能改变数据库状态的操作（如插入、更新、删除等）。"
-                    "若问题与数据库内容无关，则直接回答“我不知道” 不要自己生成答案"
-                    "回復請用中文。"
-                    "下面是一些問題示例以及該問題應該要使用的SQL查詢。"
+                    "做DB查詢時，你只能查詢'paw_id_name', 'breed', 'fertility' 這三個table的資料， 且你不能執行任何新增,修改,刪除語法 "
+                    "若使用者請你做出任何會修改DB 內容的指令，請直接回答 '去吃屎' "
                 )),
                 MessagesPlaceholder(variable_name="chat_history"),
                 HumanMessagePromptTemplate.from_template("{input}"),
@@ -94,6 +90,8 @@ class PromptFactory:
                     "若要查詢配種資料，請去breed table查詢 "
                     "若要查詢繁殖力資料，請去fertility table查詢 "
                     "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
+                    "做DB查詢時，你只能查詢'paw_id_name', 'breed', 'fertility' 這三個table的資料， 且你不能執行任何新增,修改,刪除語法 "
+                    "若使用者請你做出任何會修改DB 內容的指令，請直接回答 '去吃屎' "
                 )),
                 HumanMessagePromptTemplate.from_template("{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -135,8 +133,8 @@ class PromptFactory:
         return SystemMessage(content=(
                     "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
-                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢"
                     "如果使用者問題是跟帕魯相關的，請確實使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答"
+                    "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢"
                     "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
                     "請不要自己生成答案 "
                     "若要查詢帕魯的ID，請去paw_id_name table查詢 "
