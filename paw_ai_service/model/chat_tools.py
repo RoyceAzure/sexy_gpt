@@ -38,6 +38,10 @@ def get_sql_exmples():
             {
                 "questersion": "燎火鹿可以配種出花冠龍嗎?",
                 "query": "SELECT * FROM breed WHERE parent1='燎火鹿' AND child='花冠龍';",
+            },
+            {
+                "questersion": "冰帝美露帕的繁殖力是多少?",
+                "query": "SELECT * FROM fertility WHERE name = '冰帝美露帕';",
             }
             """
 
@@ -83,6 +87,7 @@ class SQLAlchemyTools(DB_Tools):
                 template = (
                     f"{dbResultStr}\n  以上你看到的就是所有table schema，"
                     "'breed': 描述 : 表格為一種名為'帕魯'生物的配種表 "
+                    "'fertility': 表格內容是各種怕魯的繁殖力 "
                 )
                 return template
         except Exception as err:
