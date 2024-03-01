@@ -84,12 +84,16 @@ class PromptFactory:
         prompt = ChatPromptTemplate(
             messages=[
                 SystemMessage(content=(
-                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料"
+                    "你可以Access db，db裡面存放帕魯的資料以及帕魯的配種資料，查詢時請使用中文當作參數查詢 "
                     "breed table 裡面存放的是一種名叫“帕魯” 生物的配種表，表示parent1跟parent2欄位的帕魯可以生下child欄位的帕魯"
                     "請先使用'get_example_tool' function 查看範例，裡面有user問題跟要使用甚麼樣的SQL做查詢 "
                     "請跟據使用者提出的問題來修改Query的參數，不要照抄範例的Query "
                     "再使用run_sqlite_query 'function' 執行SQL查詢語句，並且根據查詢結果作回答 "
-                    "執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "除非使用者要求'我要全部的資料'，否則執行任何SQL查詢時，SQL指令請一律加上limit 10，避免過多資料回傳 "
+                    "若要查詢帕魯的ID，請去paw_id_name table查詢 "
+                    "若要查詢配種資料，請去breed table查詢 "
+                    "若要查詢繁殖力資料，請去fertility table查詢 "
+                    "如果遇到 no such column 錯誤，請先使用describe_tables' function 查詢欄位 "
                 )),
                 HumanMessagePromptTemplate.from_template("{input}"),
                 MessagesPlaceholder(variable_name="agent_scratchpad")
