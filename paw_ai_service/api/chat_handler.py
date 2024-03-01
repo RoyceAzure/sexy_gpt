@@ -1,10 +1,9 @@
 import uuid
 from flask import Blueprint, jsonify
 from flask import request
-from repository.database import Repository, SQLAlchemyConnFactory
-from model.chat_tools import DB_Tools, SQLAlchemyTools
+from repository.database import SQLAlchemyConnFactory
+from model.chat_tools import SQLAlchemyTools, SQLAlchemy_Sqllite_Tools
 from model.openail_model import ChatModelFactory
-from langchain.memory import ConversationBufferMemory
 from model.agent import ChatArgs, SingleTonAgenFactory
 from model.prompt import PromptFactory
 from model.schema.question_schema import FreetalkSchema, FreetalkNoMemorySchema
@@ -38,11 +37,11 @@ def chat_users():
     prompt = PromptFactory.create_chat_prompt_no_memory()
     
     engine = SQLAlchemyConnFactory.get_singleton_conn("sqlite:///paw.db")
-    dbTolls = SQLAlchemyTools(engine)
+    dbTolls = SQLAlchemy_Sqllite_Tools(engine)
     tools = dbTolls.get_db_dools()
     
     config = ConfigManager.get_config()
-    chat_arg = ChatArgs(llm, prompt, None, expired_time = config.FREE_CHAT_MEMORY_TIME ,streaming=False, use_memory=True,  tool = tools)
+    chat_arg = ChatArgs(llm, prompt, None, expired_time = config.FREE_CHAT_MEMORY_TIME ,streaming=False, use_memory=False,  tool = tools)
     
     wrap_agent_excutor = agent_factory.build_agent_excutor(chat_arg)
     
@@ -120,7 +119,7 @@ def free_chat():
     prompt = PromptFactory.create_chat_prompt()
     
     engine = SQLAlchemyConnFactory.get_singleton_conn("sqlite:///paw.db")
-    dbTolls = SQLAlchemyTools(engine)
+    dbTolls = SQLAlchemy_Sqllite_Tools(engine)
     tools = dbTolls.get_db_dools()
     
     config = ConfigManager.get_config()
