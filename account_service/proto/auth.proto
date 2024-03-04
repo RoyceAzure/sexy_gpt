@@ -54,6 +54,9 @@ message RefreshTokenResponse{
     Token token=2;
 }
 
+message GoogleIDTokenRequest{
+    string id_token=1;
+}
 
 
 
