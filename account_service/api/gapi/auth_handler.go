@@ -2,14 +2,18 @@ package gapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
+	sso "github.com/RoyceAzure/sexy_gpt/account_service/repository/SSO"
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/gpt_error"
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/validate"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -42,17 +46,15 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTORe
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
 
-	user, err := s.dao.GetUserDTOByEmail(ctx, req.GetEmail())
+	user, err := s.Service.IsValidateUser(ctx, req.GetEmail())
 	if err != nil {
-		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
+		if errors.Is(err, gpt_error.ErrNotFound) {
 			return processAuthResponse(ctx, codes.NotFound, "user not exists", err)
+		} else if errors.Is(err, gpt_error.ErrUnauthicated) {
+			return processAuthResponse(ctx, codes.PermissionDenied, "user email is not vertified", err)
+		} else {
+			return processAuthResponse(ctx, codes.Internal, "internal err", err)
 		}
-		return processAuthResponse(ctx, codes.Internal, "internal err", err)
-	}
-
-	if !user.IsEmailVerified {
-		return processAuthResponse(ctx, codes.PermissionDenied, "user email is not vertified", err)
-
 	}
 
 	if err := util.CheckPassword(req.GetPassword(), user.HashedPassword); err != nil {
@@ -62,69 +64,11 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTORe
 	userId := user.UserID.Bytes
 	roldeId := user.RoleID.Bytes
 	tokenSubject := token.NewTokenSubject(user.Email, userId, roldeId)
-	oldSession, err := s.dao.GetSessionByUserId(ctx, user.UserID)
 
 	var refreshToken string
-	var refreshPayLoad *token.TokenPayload
-
+	refreshToken, err = s.Service.LoginCreateSession(ctx, userId, s.tokenMaker, s.config)
 	if err != nil {
-		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
-			refreshToken, refreshPayLoad, err = s.tokenMaker.CreateToken(nil, "refresh", s.config.AUTH_ISSUER, s.config.RefreshTokenDuration)
-			if err != nil {
-				return processAuthResponse(ctx, codes.Internal, "internal err", err)
-			}
-
-			_, err = s.dao.CreateSession(ctx, db.CreateSessionParams{
-				UserID: pgtype.UUID{
-					Bytes: userId,
-					Valid: true,
-				},
-				RefreshToken: refreshToken,
-				UserAgent:    "todo",
-				ClientIp:     "todo",
-				ExpiredAt: pgtype.Timestamptz{
-					Time:  refreshPayLoad.ExpiredAt,
-					Valid: true,
-				},
-			})
-			if err != nil {
-				return processAuthResponse(ctx, codes.Internal, "internal err", err)
-			}
-		} else {
-			_, err := s.dao.DeleteSession(ctx, oldSession.ID)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "%s", err)
-			}
-		}
-	} else {
-		if time.Now().After(oldSession.ExpiredAt.Time) {
-			_, err := s.dao.DeleteSession(ctx, oldSession.ID)
-			if err != nil {
-				return processAuthResponse(ctx, codes.Internal, "internal err", err)
-			}
-			refreshToken, refreshPayLoad, err := s.tokenMaker.CreateToken(nil, "refresh", s.config.AUTH_ISSUER, s.config.RefreshTokenDuration)
-			if err != nil {
-				return processAuthResponse(ctx, codes.Internal, "internal err", err)
-			}
-
-			_, err = s.dao.CreateSession(ctx, db.CreateSessionParams{
-				UserID: pgtype.UUID{
-					Bytes: userId,
-					Valid: true,
-				},
-				RefreshToken: refreshToken,
-				UserAgent:    "todo",
-				ClientIp:     "todo",
-				ExpiredAt: pgtype.Timestamptz{
-					Time:  refreshPayLoad.ExpiredAt,
-					Valid: true,
-				},
-			})
-			if err != nil {
-				return processAuthResponse(ctx, codes.Internal, "internal err", err)
-			}
-		}
-		refreshToken = oldSession.RefreshToken
+		processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
 	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, s.config.AccessTokenDuration)
@@ -132,7 +76,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTORe
 		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
-	res := ConvertAuthDTO("login successed", ConvertUserDTO(&user), ConvertToken(accessPayLoad, accessToken, refreshToken))
+	res := ConvertAuthDTO("login successed", ConvertUserDTO(user), ConvertToken(accessPayLoad, accessToken, refreshToken))
 	if err != nil {
 		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
@@ -205,6 +149,92 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 	}
 
 	res := ConvertAuthDTO("refresh token successed", nil, ConvertToken(accessPayLoad, accessToken, ""))
+	if err != nil {
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
+	}
+	return res, nil
+}
+
+func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenRequest) (*pb.AuthDTOResponse, error) {
+	// httpClient, err := google.DefaultClient(ctx)
+	// if err != nil {
+	// 	return processAuthResponse(ctx, codes.Internal, "internal err", err)
+	// }
+
+	tokenInfo, err := sso.VertifyGoogleSSO(ctx, req.GetIdToken())
+	if err != nil {
+		return processAuthResponse(ctx, codes.Unauthenticated, "invalid token", err)
+	}
+
+	userEmail := tokenInfo.Email
+	user, err := s.dao.GetUserDTOByEmail(ctx, userEmail)
+	if err != nil {
+		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
+			// return processAuthResponse(ctx, codes.NotFound, "user not exists", err)
+			//創建使用者
+			userName := strings.Split(userEmail, "@")[0]
+
+			randomPas := random.RandomString(15)
+			hashPassword, err := util.HashPassword(randomPas)
+			if err != nil {
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
+			}
+
+			arg := db.CreateUserTxParms{
+				Arg: &db.CreateUserParams{
+					UserName:       userName,
+					Email:          userEmail,
+					HashedPassword: hashPassword,
+					IsInternal:     false,
+					CrUser:         "SYSTEM",
+				},
+			}
+
+			TxResult, err := s.dao.CreateUserTx(ctx, &arg)
+			if err != nil {
+				return processAuthResponse(ctx, codes.Internal, "internal err", err)
+			}
+
+			user = db.UserRoleView{
+				UserID:          TxResult.User.UserID,
+				UserName:        TxResult.User.UserName,
+				IsEmailVerified: TxResult.User.IsEmailVerified,
+				Email:           TxResult.User.Email,
+			}
+		}
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
+	}
+
+	//直接修改為已經驗證
+	if !user.IsEmailVerified {
+		_, err = s.dao.UpdateUser(ctx, db.UpdateUserParams{
+			UserID: user.UserID,
+			IsEmailVerified: pgtype.Bool{
+				Bool:  true,
+				Valid: true,
+			},
+		})
+		if err != nil {
+			return processAuthResponse(ctx, codes.Internal, "internal err", err)
+		}
+	}
+
+	userId := user.UserID.Bytes
+	roldeId := user.RoleID.Bytes
+	tokenSubject := token.NewTokenSubject(user.Email, userId, roldeId)
+
+	var refreshToken string
+	refreshToken, err = s.Service.LoginCreateSession(ctx, userId, s.tokenMaker, s.config)
+	if err != nil {
+		processAuthResponse(ctx, codes.Internal, "internal err", err)
+	}
+
+	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, s.config.AccessTokenDuration)
+	if err != nil {
+		return processAuthResponse(ctx, codes.Internal, "internal err", err)
+	}
+
+	res := ConvertAuthDTO("login successed", ConvertUserDTO(&user), ConvertToken(accessPayLoad, accessToken, refreshToken))
 	if err != nil {
 		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}

@@ -113,6 +113,40 @@
         ]
       }
     },
+    "/v1/sso/google": {
+      "post": {
+        "summary": "for google sso login",
+        "description": "for google sso login, given token in body",
+        "operationId": "AccountService_SSOGoogleLogin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbAuthDTOResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pbGoogleIDTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
     "/v1/user": {
       "get": {
         "summary": "Get user",
@@ -146,7 +180,7 @@
       },
       "post": {
         "summary": "Create new user",
-        "description": "不須token，userName必填，email必填，pas必填且長度\u003e=6，包含大小寫字母跟數字，需要接收email認證",
+        "description": "不需token，userName必填，email必填，pas必填且長度\u003e=6，包含大小寫字母跟數字，需要接收email認證",
         "operationId": "AccountService_CreateUser",
         "responses": {
           "200": {
@@ -413,6 +447,14 @@
           "type": "string"
         },
         "password": {
+          "type": "string"
+        }
+      }
+    },
+    "pbGoogleIDTokenRequest": {
+      "type": "object",
+      "properties": {
+        "idToken": {
           "type": "string"
         }
       }

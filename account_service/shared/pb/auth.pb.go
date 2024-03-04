@@ -413,6 +413,53 @@ func (x *RefreshTokenResponse) GetToken() *Token {
 	return nil
 }
 
+type GoogleIDTokenRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	IdToken string `protobuf:"bytes,1,opt,name=id_token,json=idToken,proto3" json:"id_token,omitempty"`
+}
+
+func (x *GoogleIDTokenRequest) Reset() {
+	*x = GoogleIDTokenRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_auth_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GoogleIDTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoogleIDTokenRequest) ProtoMessage() {}
+
+func (x *GoogleIDTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoogleIDTokenRequest.ProtoReflect.Descriptor instead.
+func (*GoogleIDTokenRequest) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GoogleIDTokenRequest) GetIdToken() string {
+	if x != nil {
+		return x.IdToken
+	}
+	return ""
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 var file_auth_proto_rawDesc = []byte{
@@ -459,11 +506,14 @@ var file_auth_proto_rawDesc = []byte{
 	0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73,
 	0x61, 0x67, 0x65, 0x12, 0x1f, 0x0a, 0x05, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x09, 0x2e, 0x70, 0x62, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x52, 0x05, 0x74,
-	0x6f, 0x6b, 0x65, 0x6e, 0x42, 0x3a, 0x5a, 0x38, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x52, 0x6f, 0x79, 0x63, 0x65, 0x41, 0x7a, 0x75, 0x72, 0x65, 0x2f, 0x73, 0x65,
-	0x78, 0x79, 0x5f, 0x67, 0x70, 0x74, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x2f, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6b, 0x65, 0x6e, 0x22, 0x31, 0x0a, 0x14, 0x47, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x49, 0x44,
+	0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08,
+	0x69, 0x64, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x69, 0x64, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x42, 0x3a, 0x5a, 0x38, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x52, 0x6f, 0x79, 0x63, 0x65, 0x41, 0x7a, 0x75, 0x72, 0x65,
+	0x2f, 0x73, 0x65, 0x78, 0x79, 0x5f, 0x67, 0x70, 0x74, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64,
+	0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -478,7 +528,7 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auth_proto_goTypes = []interface{}{
 	(*Token)(nil),                 // 0: pb.Token
 	(*AuthDTOResponse)(nil),       // 1: pb.AuthDTOResponse
@@ -487,13 +537,14 @@ var file_auth_proto_goTypes = []interface{}{
 	(*LogoutResponse)(nil),        // 4: pb.LogoutResponse
 	(*RefreshTokenRequset)(nil),   // 5: pb.RefreshTokenRequset
 	(*RefreshTokenResponse)(nil),  // 6: pb.RefreshTokenResponse
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*UserDTO)(nil),               // 8: pb.UserDTO
+	(*GoogleIDTokenRequest)(nil),  // 7: pb.GoogleIDTokenRequest
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*UserDTO)(nil),               // 9: pb.UserDTO
 }
 var file_auth_proto_depIdxs = []int32{
-	7, // 0: pb.Token.issure_at:type_name -> google.protobuf.Timestamp
-	7, // 1: pb.Token.expired_at:type_name -> google.protobuf.Timestamp
-	8, // 2: pb.AuthDTOResponse.user:type_name -> pb.UserDTO
+	8, // 0: pb.Token.issure_at:type_name -> google.protobuf.Timestamp
+	8, // 1: pb.Token.expired_at:type_name -> google.protobuf.Timestamp
+	9, // 2: pb.AuthDTOResponse.user:type_name -> pb.UserDTO
 	0, // 3: pb.AuthDTOResponse.token:type_name -> pb.Token
 	0, // 4: pb.RefreshTokenResponse.token:type_name -> pb.Token
 	5, // [5:5] is the sub-list for method output_type
@@ -594,6 +645,18 @@ func file_auth_proto_init() {
 				return nil
 			}
 		}
+		file_auth_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GoogleIDTokenRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -601,7 +664,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_auth_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

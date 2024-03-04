@@ -30,6 +30,7 @@ const (
 	AccountService_RefreshToken_FullMethodName    = "/pb.AccountService/RefreshToken"
 	AccountService_SendVertifyEmai_FullMethodName = "/pb.AccountService/SendVertifyEmai"
 	AccountService_VertifyEmail_FullMethodName    = "/pb.AccountService/VertifyEmail"
+	AccountService_SSOGoogleLogin_FullMethodName  = "/pb.AccountService/SSOGoogleLogin"
 )
 
 // AccountServiceClient is the client API for AccountService service.
@@ -47,6 +48,7 @@ type AccountServiceClient interface {
 	RefreshToken(ctx context.Context, in *RefreshTokenRequset, opts ...grpc.CallOption) (*AuthDTOResponse, error)
 	SendVertifyEmai(ctx context.Context, in *SendVertifyEmailRequset, opts ...grpc.CallOption) (*VertifyEmailResponse, error)
 	VertifyEmail(ctx context.Context, in *VertifyEmailRequset, opts ...grpc.CallOption) (*VertifyEmailResponse, error)
+	SSOGoogleLogin(ctx context.Context, in *GoogleIDTokenRequest, opts ...grpc.CallOption) (*AuthDTOResponse, error)
 }
 
 type accountServiceClient struct {
@@ -156,6 +158,15 @@ func (c *accountServiceClient) VertifyEmail(ctx context.Context, in *VertifyEmai
 	return out, nil
 }
 
+func (c *accountServiceClient) SSOGoogleLogin(ctx context.Context, in *GoogleIDTokenRequest, opts ...grpc.CallOption) (*AuthDTOResponse, error) {
+	out := new(AuthDTOResponse)
+	err := c.cc.Invoke(ctx, AccountService_SSOGoogleLogin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServiceServer is the server API for AccountService service.
 // All implementations must embed UnimplementedAccountServiceServer
 // for forward compatibility
@@ -171,6 +182,7 @@ type AccountServiceServer interface {
 	RefreshToken(context.Context, *RefreshTokenRequset) (*AuthDTOResponse, error)
 	SendVertifyEmai(context.Context, *SendVertifyEmailRequset) (*VertifyEmailResponse, error)
 	VertifyEmail(context.Context, *VertifyEmailRequset) (*VertifyEmailResponse, error)
+	SSOGoogleLogin(context.Context, *GoogleIDTokenRequest) (*AuthDTOResponse, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -210,6 +222,9 @@ func (UnimplementedAccountServiceServer) SendVertifyEmai(context.Context, *SendV
 }
 func (UnimplementedAccountServiceServer) VertifyEmail(context.Context, *VertifyEmailRequset) (*VertifyEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VertifyEmail not implemented")
+}
+func (UnimplementedAccountServiceServer) SSOGoogleLogin(context.Context, *GoogleIDTokenRequest) (*AuthDTOResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SSOGoogleLogin not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}
 
@@ -422,6 +437,24 @@ func _AccountService_VertifyEmail_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountService_SSOGoogleLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GoogleIDTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).SSOGoogleLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_SSOGoogleLogin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).SSOGoogleLogin(ctx, req.(*GoogleIDTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AccountService_ServiceDesc is the grpc.ServiceDesc for AccountService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -472,6 +505,10 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VertifyEmail",
 			Handler:    _AccountService_VertifyEmail_Handler,
+		},
+		{
+			MethodName: "SSOGoogleLogin",
+			Handler:    _AccountService_SSOGoogleLogin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
