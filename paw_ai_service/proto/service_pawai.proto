@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "chat.proto";
+package pb;
+
+    
+service PawAIService {
+  // Sends a greeting
+  rpc FreeChat (FreeChatRequest) returns (ChatResponse) {}
+  rpc Chat (ChatRequest) returns (ChatResponse) {}
+  rpc InitSession (InitSessionRequest) returns (InitSessionResponse) {}
+}

@@ -16,7 +16,7 @@ class Config:
 class DevelopmentConfig(Config):
     # 測試
     FREE_AGENT_EXPIRED_TIME = timedelta(hours=1)
-    IS_ENV_OVERWRITE = False
+    IS_ENV_OVERWRITE = True
     DEBUG = True
 
 class ProductionConfig(Config):
