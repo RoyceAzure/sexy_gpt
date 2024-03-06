@@ -11,7 +11,7 @@ import (
 type IUserService interface {
 	/*
 		des:
-			驗證user 合法
+			驗證user email是否驗證過
 		parm:
 			email:  user email
 		errors:

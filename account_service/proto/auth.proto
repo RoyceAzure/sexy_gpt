@@ -58,5 +58,14 @@ message GoogleIDTokenRequest{
     string id_token=1;
 }
 
+message ValidateTokenRequest{
+    string access_token=1;
+}
+
+message ValidateTokenResponse{
+    string message=1;
+    UserDTO user=2;
+    Token token=3;
+}
 
 

@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "chat.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+package pb;
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/broker_service/shared/pb";
+service PawAIService {
+  // Sends a greeting
+  rpc FreeChat (FreeChatRequest) returns (ChatResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/freechat"
+      body: "*"
+      };
+      option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        description: "需要token，不會保存對話紀錄";
+        summary: "FreeChat";
+      };
+  }
+  rpc Chat (ChatRequest) returns (ChatResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/chat"
+      body: "*"
+      };
+      option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        description: "需要token, 會保存對話紀錄";
+        summary: "chat";
+      };
+  }
+  rpc InitSession (InitSessionRequest) returns (InitSessionResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/chat/init"
+      };
+      option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        description: "Call chat api前，需要先創建session";
+        summary: "Call chat api前，需要先創建session";
+      };
+  }
+}

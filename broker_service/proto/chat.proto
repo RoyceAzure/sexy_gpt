@@ -1,0 +1,25 @@
+syntax = "proto3";
+package pb;
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/broker_service/shared/pb";
+message FreeChatRequest{
+    string question=1;
+}
+
+message ChatRequest{
+    string session_id=1;
+    string question=2;
+}
+
+message ChatResponse{
+    int32 code=1;
+    string ans=2;
+}
+
+message InitSessionRequest{
+}
+
+message InitSessionResponse{
+    int32 code=1;
+    string session_id=2;
+}

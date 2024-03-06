@@ -1,0 +1,71 @@
+syntax = "proto3";
+package pb;
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+
+option go_package = "github.com/RoyceAzure/sexy_gpt/broker_service/shared/pb";
+
+
+
+message Token{
+    string audience=1;
+    string Issuer=2;
+    google.protobuf.Timestamp issure_at=3;
+    google.protobuf.Timestamp expired_at=4;
+    string access_token=5;
+    string refresh_token=6;
+}
+
+
+
+message AuthDTOResponse{
+    string message=1;
+    UserDTO user=2;
+    Token token=3;
+}
+
+
+message LoginRequset{
+    string email=1;
+    string password=2;
+}
+
+// message LoginResponse{
+//     UserDTO data=1;
+//     Token token_data=2;
+// }
+
+
+
+message LogoutRequset{
+}
+
+message LogoutResponse{
+    string message=1;
+}
+
+message RefreshTokenRequset{
+    string refresh_token=1;
+}
+
+message RefreshTokenResponse{
+    string message=1;
+    Token token=2;
+}
+
+message GoogleIDTokenRequest{
+    string id_token=1;
+}
+
+message ValidateTokenRequest{
+    string access_token=1;
+}
+
+message ValidateTokenResponse{
+    string message=1;
+    UserDTO user=2;
+    Token token=3;
+}
+
+

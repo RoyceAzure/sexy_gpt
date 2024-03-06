@@ -12,6 +12,7 @@ import (
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util"
+	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/converter"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/gpt_error"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/validate"
@@ -238,6 +239,34 @@ func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenReques
 	if err != nil {
 		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
+	return res, nil
+}
+
+func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.AuthDTOResponse, error) {
+	payload, err := s.tokenMaker.VertifyToken(req.GetAccessToken())
+	if err != nil {
+		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
+	}
+
+	user, err := s.Service.IsValidateUser(ctx, payload.Subject.UPN)
+	if err != nil {
+		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
+	}
+
+	_, err = s.Service.IsUserLogin(ctx, payload.Subject.UserId)
+	if err != nil {
+		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
+	}
+
+	userDTO := pb.UserDTO{
+		UserId:   converter.ConvertXByte2UUID(user.UserID.Bytes),
+		UserName: user.UserName,
+		RoleName: user.RoleName.String,
+		Email:    user.Email,
+		RoleId:   converter.ConvertXByte2UUID(user.RoleID.Bytes),
+	}
+	res := ConvertAuthDTO("validatd access token successed", &userDTO, nil)
+
 	return res, nil
 }
 

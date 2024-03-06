@@ -147,6 +147,40 @@
         ]
       }
     },
+    "/v1/token/vaildate": {
+      "post": {
+        "summary": "validate access token",
+        "description": "validate access token",
+        "operationId": "AccountService_ValidateToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbAuthDTOResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pbValidateTokenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
     "/v1/user": {
       "get": {
         "summary": "Get user",
@@ -547,6 +581,9 @@
         },
         "roleName": {
           "type": "string"
+        },
+        "roleId": {
+          "type": "string"
         }
       }
     },
@@ -573,6 +610,14 @@
             "type": "object",
             "$ref": "#/definitions/pbUserDTO"
           }
+        }
+      }
+    },
+    "pbValidateTokenRequest": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
         }
       }
     },
