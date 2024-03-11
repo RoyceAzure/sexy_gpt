@@ -46,12 +46,18 @@ def chat_users():
     wrap_agent_excutor = agent_factory.build_agent_excutor(chat_arg)
     
     
-    result = wrap_agent_excutor.chat_with_agent(ques)
-
-    response = {
-        "code":200,
-        "ans" : result["output"]
-    }
+    try:
+        result = wrap_agent_excutor.chat_with_agent(ques)
+        response = {
+            "code":200,
+            "ans" : result["output"]
+        }
+    except Exception as e:
+        print(e)
+        response ={
+            "code":e.status_code,
+            "ans" : e.code
+        }
 
     return response
 
@@ -127,12 +133,17 @@ def free_chat():
     
     wrap_agent_excutor = agent_factory.build_agent_excutor(chat_arg)
     
-    
-    result = wrap_agent_excutor.chat_with_agent(ques)
+    try:
+        result = wrap_agent_excutor.chat_with_agent(ques)
+        response = {
+            "code":200,
+            "ans" : result["output"]
+        }
+    except Exception as e:
+        response ={
+            "code":e.status_code,
+            "ans" : e.code
+        }
 
-    response = {
-        "code":200,
-        "ans" : result["output"]
-    }
 
     return response
