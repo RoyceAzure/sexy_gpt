@@ -120,11 +120,6 @@ func (server *AccountServer) UpdateUserPas(ctx context.Context, req *pb.UpdateUs
 }
 
 func (server *AccountServer) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTOResponse, error) {
-	_, _, err := server.authorizer.AuthorizToken(ctx)
-	if err != nil {
-		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
-	}
-
 	return server.accountServiceDao.Login(ctx, req)
 }
 
@@ -147,19 +142,10 @@ func (server *AccountServer) RefreshToken(ctx context.Context, req *pb.RefreshTo
 }
 
 func (server *AccountServer) SendVertifyEmai(ctx context.Context, req *pb.SendVertifyEmailRequset) (*pb.VertifyEmailResponse, error) {
-	_, _, err := server.authorizer.AuthorizToken(ctx)
-	if err != nil {
-		return processVertifyEmailResponse(ctx, codes.Unauthenticated, err.Error(), err)
-	}
-
 	return server.accountServiceDao.SendVertifyEmai(ctx, req)
 }
 
 func (server *AccountServer) VertifyEmail(ctx context.Context, req *pb.VertifyEmailRequset) (*pb.VertifyEmailResponse, error) {
-	_, _, err := server.authorizer.AuthorizToken(ctx)
-	if err != nil {
-		return processVertifyEmailResponse(ctx, codes.Unauthenticated, err.Error(), err)
-	}
 
 	return server.accountServiceDao.VertifyEmail(ctx, req)
 }

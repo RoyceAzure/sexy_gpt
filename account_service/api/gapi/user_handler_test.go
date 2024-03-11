@@ -775,29 +775,32 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		mock_dao := mock_db.NewMockDao(ctrl)
 
-		ctrl2 := gomock.NewController(t)
-		defer ctrl2.Finish()
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mock_dao := mock_db.NewMockDao(ctrl)
 
-		service := mock_service.NewMockIService(ctrl2)
+			ctrl2 := gomock.NewController(t)
+			defer ctrl2.Finish()
 
-		tc.buildStub(mock_dao, service)
+			service := mock_service.NewMockIService(ctrl2)
 
-		tokenMaker, err := token.NewPasetoMaker(key)
+			tc.buildStub(mock_dao, service)
 
-		require.NoError(t, err)
+			tokenMaker, err := token.NewPasetoMaker(key)
 
-		server, err := NewServer(config.Config{}, mock_dao, tokenMaker, service)
+			require.NoError(t, err)
 
-		require.NoError(t, err)
+			server, err := NewServer(config.Config{}, mock_dao, tokenMaker, service)
 
-		ctx := tc.buildContext(t, tokenMaker, "audi", "isur", time.Hour*1)
+			require.NoError(t, err)
 
-		res, err := server.UpdateUser(ctx, tc.req)
+			ctx := tc.buildContext(t, tokenMaker, "audi", "isur", time.Hour*1)
 
-		tc.checkResponse(t, res, err)
+			res, err := server.UpdateUser(ctx, tc.req)
+
+			tc.checkResponse(t, res, err)
+		})
 	}
 }

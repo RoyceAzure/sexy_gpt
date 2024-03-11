@@ -29,6 +29,27 @@ services:
     ports:
       - "6379:6379"
 
+
+  pawai-service:
+    build:
+      context: ./paw_ai_service
+      dockerfile: pawai.DockerFile
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py
+      - FLASK_RUN_HOST=0.0.0.0
+      - REDIS_HOST=redis-asynq
+      - REDIS_PORT=6379
+    ports:
+      - "5000:5000"
+      - "9092:9092"
+    depends_on:
+      - redis-asynq
+    # # command: ["/app/main"]
+    command: ["python", "app.py"]
+
+
+
   account-service:
     build:
       context: ./account_service
@@ -44,8 +65,9 @@ services:
     depends_on:
       - postgres
       - logger-service
-    # command: ["/app/main"]
-    command: ["sh","/app/wait-for.sh","postgres:5432", "--","/app/main"]
+      - redis-asynq
+    command: ["/app/main"]
+    # command: ["sh","/app/wait-for.sh","postgres:5432", "--","/app/main"]
 
   logger-service:
     build:

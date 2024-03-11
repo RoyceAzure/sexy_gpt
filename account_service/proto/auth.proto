@@ -55,7 +55,7 @@ message RefreshTokenResponse{
 }
 
 message GoogleIDTokenRequest{
-    string id_token=1;
+    string token=1;
 }
 
 message ValidateTokenRequest{

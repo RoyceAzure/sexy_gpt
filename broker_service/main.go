@@ -16,7 +16,6 @@ import (
 	"github.com/RoyceAzure/sexy_gpt/broker_service/shared/util/config"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
-	"github.com/rakyll/statik/fs"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -159,21 +158,21 @@ func runGRPCGatewayServer(
 		使用 http.Handle("/swagger")（沒有結尾的斜線）只匹配 /swagger 這一具體的路徑，不匹配 /swagger/abc 或其他子路徑。
 		總之，要確保路由以斜線 (/) 開始，並根據你的需求決定是否在結尾添加斜線。*/
 
-	// fs := http.FileServer(http.Dir("./doc/swagger"))
+	fs := http.FileServer(http.Dir("./doc/swagger"))
 
 	//這個FileSystem內容是zip content data, 剛好跟statik使用的依樣
 
 	//在statik.go init()裡面已經註冊了使用statik編譯好的data
 	//這裡New就是把他轉成fileSystem, 然後再搭配http.FileServer 即可
-	statikFS, err := fs.New()
-	if err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("can't create statik fs err")
-	}
+	// statikFS, err := fs.New()
+	// if err != nil {
+	// 	log.Fatal().
+	// 		Err(err).
+	// 		Msg("can't create statik fs err")
+	// }
 
 	//http.StripPrefix 會回傳handler
-	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	swaggerHandler := http.StripPrefix("/swagger/", fs)
 	mux.Handle("/swagger/", swaggerHandler)
 
 	// 在指定地址上建立監聽

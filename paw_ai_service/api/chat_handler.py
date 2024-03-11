@@ -12,7 +12,7 @@ from chatconfig.config_manager import ConfigManager
 
 chat_pb = Blueprint("chat_pb", __name__)
 
-@chat_pb.route('/chat', methods=['POST'])
+@chat_pb.route('/freechat', methods=['POST'])
 def chat_users():
     """
     無memeory，不紀錄紀錄歷史訊息
@@ -89,7 +89,7 @@ def init_chat():
 
 
 
-@chat_pb.route('/freechat', methods=['POST'])
+@chat_pb.route('/chat', methods=['POST'])
 def free_chat():
     """
     目前使用redis + sessionId, 儲存對話

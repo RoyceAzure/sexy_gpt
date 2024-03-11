@@ -7,7 +7,6 @@ import (
 
 	"github.com/RoyceAzure/sexy_gpt/broker_service/api/token"
 	"google.golang.org/grpc/metadata"
-
 )
 
 const (
@@ -54,9 +53,9 @@ func (auth *Authorizer) AuthorizToken(ctx context.Context) (*token.Payload, stri
 	}
 
 	accessToken := authHeader[1]
-	payload, err := auth.tokenMaker.VertifyToken(accessToken)
-	if err != nil {
-		return nil, "", fmt.Errorf("invaliad access token : %s", err)
-	}
-	return payload, accessToken, nil
+	// payload, err := auth.tokenMaker.VertifyToken(accessToken)
+	// if err != nil {
+	// 	return nil, "", fmt.Errorf("invaliad access token : %s", err)
+	// }
+	return nil, accessToken, nil
 }

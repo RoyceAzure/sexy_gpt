@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/api/gapi/token"
-	sso "github.com/RoyceAzure/sexy_gpt/account_service/repository/SSO"
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
+	sso "github.com/RoyceAzure/sexy_gpt/account_service/repository/sso"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/converter"
@@ -17,7 +17,6 @@ import (
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/validate"
 	"github.com/jackc/pgx/v5/pgtype"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -43,8 +42,12 @@ func processAuthResponse(ctx context.Context, code codes.Code, msg string, err e
 }
 
 func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTOResponse, error) {
-	if violations := valideteLoginReq(req); violations != nil {
-		return nil, gpt_error.InvalidArgumentError(violations)
+	if violations := valideteLoginReqV2(req); violations != nil {
+		msg, err := violations.ToJson()
+		if err != nil {
+			msg = "Invalidate argument"
+		}
+		return processAuthResponse(ctx, codes.InvalidArgument, msg, err)
 	}
 
 	user, err := s.Service.IsValidateUser(ctx, req.GetEmail())
@@ -157,12 +160,7 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 }
 
 func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenRequest) (*pb.AuthDTOResponse, error) {
-	// httpClient, err := google.DefaultClient(ctx)
-	// if err != nil {
-	// 	return processAuthResponse(ctx, codes.Internal, "internal err", err)
-	// }
-
-	tokenInfo, err := sso.VertifyGoogleSSO(ctx, req.GetIdToken())
+	tokenInfo, err := sso.VertifyGoogleSSOIDToken(ctx, req.GetToken(), s.config.FRONTEND_KEY)
 	if err != nil {
 		return processAuthResponse(ctx, codes.Unauthenticated, "invalid token", err)
 	}
@@ -170,9 +168,9 @@ func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenReques
 	userEmail := tokenInfo.Email
 	user, err := s.dao.GetUserDTOByEmail(ctx, userEmail)
 	if err != nil {
+		//case user not exists : create user
 		if err.Error() == gpt_error.DB_ERR_NOT_FOUND.Error() {
-			// return processAuthResponse(ctx, codes.NotFound, "user not exists", err)
-			//創建使用者
+
 			userName := strings.Split(userEmail, "@")[0]
 
 			randomPas := random.RandomString(15)
@@ -188,6 +186,10 @@ func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenReques
 					HashedPassword: hashPassword,
 					IsInternal:     false,
 					CrUser:         "SYSTEM",
+					SsoIdentifer: pgtype.Text{
+						String: "google",
+						Valid:  true,
+					},
 				},
 			}
 
@@ -202,11 +204,12 @@ func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenReques
 				IsEmailVerified: TxResult.User.IsEmailVerified,
 				Email:           TxResult.User.Email,
 			}
+		} else {
+			return processAuthResponse(ctx, codes.Internal, "internal err", err)
 		}
-		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
-	//直接修改為已經驗證
+	// set IsEmailVerified true
 	if !user.IsEmailVerified {
 		_, err = s.dao.UpdateUser(ctx, db.UpdateUserParams{
 			UserID: user.UserID,
@@ -224,21 +227,20 @@ func (s *Server) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenReques
 	roldeId := user.RoleID.Bytes
 	tokenSubject := token.NewTokenSubject(user.Email, userId, roldeId)
 
+	//create login session
 	var refreshToken string
 	refreshToken, err = s.Service.LoginCreateSession(ctx, userId, s.tokenMaker, s.config)
 	if err != nil {
 		processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
+	//create token
 	accessToken, accessPayLoad, err := s.tokenMaker.CreateToken(tokenSubject, s.config.AUTH_AUDIENCE, s.config.AUTH_ISSUER, s.config.AccessTokenDuration)
 	if err != nil {
 		return processAuthResponse(ctx, codes.Internal, "internal err", err)
 	}
 
 	res := ConvertAuthDTO("login successed", ConvertUserDTO(&user), ConvertToken(accessPayLoad, accessToken, refreshToken))
-	if err != nil {
-		return processAuthResponse(ctx, codes.Internal, "internal err", err)
-	}
 	return res, nil
 }
 
@@ -270,12 +272,16 @@ func (s *Server) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest
 	return res, nil
 }
 
-func valideteLoginReq(req *pb.LoginRequset) (violations []*errdetails.BadRequest_FieldViolation) {
+func valideteLoginReqV2(req *pb.LoginRequset) *gpt_error.Message {
+	violations := &gpt_error.Message{}
 	if err := validate.ValidateEmptyString(req.GetEmail()); err != nil {
-		violations = append(violations, validate.FieldViolation("email", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("email", err))
 	}
 	if err := validate.ValidateEmptyString(req.GetPassword()); err != nil {
-		violations = append(violations, validate.FieldViolation("password", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("password", err))
+	}
+	if len(violations.ErrMessage) == 0 {
+		return nil
 	}
 	return violations
 }

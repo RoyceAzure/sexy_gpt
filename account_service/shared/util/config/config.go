@@ -16,7 +16,6 @@ type Config struct {
 	MigrateURL              string        `mapstructure:"MIGRATE_URL"`
 	GATEWAY_ACCOUNT_SERVICE string        `mapstructure:"GATEWAY_ACCOUNT_SERVICE"`
 	GRPCAccountServiceAddr  string        `mapstructure:"GRPC_ACCOUNT_SERVICE"`
-	GRPCSchedulerAddress    string        `mapstructure:"GRPC_SCHEDULER_ADDRESS"`
 	TokenSymmetricKey       string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration     time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration    time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
@@ -24,9 +23,9 @@ type Config struct {
 	EmailSenderName         string        `mapstructure:"EMAIL_SENDER_NAME"`
 	EmailSenderAddress      string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	EmailSenderPassword     string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
-	GrpcSchedulerAddress    string        `mapstructure:"GRPC_SCHEDULER_ADDRESS"`
 	AUTH_AUDIENCE           string        `mapstructure:"AUTH_AUDIENCE"`
 	AUTH_ISSUER             string        `mapstructure:"AUTH_ISSUER"`
+	FRONTEND_KEY            string        `mapstructure:"FRONTEND_KEY"`
 }
 
 /*

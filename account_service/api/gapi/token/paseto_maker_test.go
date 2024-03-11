@@ -6,23 +6,32 @@ import (
 
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/random"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPasetoMaker(t *testing.T) {
-	maker, err := NewPasetoMaker(random.RandomString(32))
+	// maker, err := NewPasetoMaker(random.RandomString(32))
+	maker, err := NewPasetoMaker("12345678123456781234567812345678")
 	require.NoError(t, err)
 	require.NotEmpty(t, maker)
 
-	duration := time.Minute
+	duration := time.Minute * 10
 
 	issuedAt := time.Now().UTC()
 	expiredAt := issuedAt.Add(duration)
-
+	id := uuid.New()
 	audi := "audi"
 	isur := "isue"
+	email := "roycewnag@gmail.com"
+	subject := TokenSubject{
+		ID:     id,
+		UPN:    email,
+		UserId: id,
+		RoleId: id,
+	}
 
-	token, payload, err := maker.CreateToken(nil, audi, isur, duration)
+	token, payload, err := maker.CreateToken(&subject, audi, isur, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
@@ -32,6 +41,8 @@ func TestPasetoMaker(t *testing.T) {
 
 	require.Equal(t, audi, payload.Audience)
 	require.Equal(t, isur, payload.Issuer)
+	require.Equal(t, email, payload.Subject.UPN)
+	require.Equal(t, id, payload.Subject.ID)
 	require.WithinDuration(t, issuedAt, payload.IssuedAt, time.Second)
 	require.WithinDuration(t, expiredAt, payload.ExpiredAt, time.Second)
 }

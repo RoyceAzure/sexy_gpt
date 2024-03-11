@@ -73,7 +73,7 @@ func main() {
 
 	w := worker.NewRedisTaskDistributor(redisOpt)
 	go runTaskProcessor(config, redisOpt, dao)
-	// go runGRPCServer(config, dao, w)
+	go runGRPCServer(config, dao, w)
 
 	runGRPCGatewayServer(config, dao, w)
 }
@@ -252,23 +252,17 @@ for local test
 */
 func initDB(ctx context.Context, dao db.Dao) error {
 	if _, err := dao.GetRoleByRoleName(ctx, constants.DEFAULT_USER_ROLE); err != nil {
-		_, err := dao.CreateRole(ctx, db.CreateRoleParams{
+		dao.CreateRole(ctx, db.CreateRoleParams{
 			RoleName: constants.DEFAULT_USER_ROLE,
 			CrUser:   "SYSTEM",
 		})
-		if err != nil {
-			return err
-		}
 	}
 
 	if _, err := dao.GetRoleByRoleName(ctx, constants.PRIME_USER_ROLE); err != nil {
-		_, err := dao.CreateRole(ctx, db.CreateRoleParams{
+		dao.CreateRole(ctx, db.CreateRoleParams{
 			RoleName: constants.PRIME_USER_ROLE,
 			CrUser:   "SYSTEM",
 		})
-		if err != nil {
-			return err
-		}
 	}
 
 	var user db.User

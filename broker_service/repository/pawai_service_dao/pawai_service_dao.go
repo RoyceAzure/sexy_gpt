@@ -3,7 +3,6 @@ package pawaiservicedaogo
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/broker_service/shared/model"
 	"github.com/RoyceAzure/sexy_gpt/broker_service/shared/pb"
@@ -23,9 +22,9 @@ type PawAIServiceDao struct {
 }
 
 func NewPawAIServiceDao(address string) (IPawAIServiceDao, func(), error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	// defer cancel()
+	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, address, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't connect grpc server, %w", gpt_error.ErrInternal)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	db "github.com/RoyceAzure/sexy_gpt/account_service/repository/db/sqlc"
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/pb"
@@ -14,7 +15,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -48,8 +48,12 @@ func processResponses(ctx context.Context, code codes.Code, msg string, err erro
 */
 func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.UserDTOResponse, error) {
 	var response pb.UserDTOResponse
-	if violations := validateCreateUserReq(req); violations != nil {
-		return nil, gpt_error.InvalidArgumentError(violations)
+	if violations := validateCreateUserReqV2(req); violations != nil {
+		msg, err := violations.ToJson()
+		if err != nil {
+			msg = "Invalidate argument"
+		}
+		return processResponse(ctx, codes.InvalidArgument, msg, err)
 	}
 
 	hashPassword, err := util.HashPassword(req.GetPassword())
@@ -109,8 +113,13 @@ func (s *Server) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.UserD
 		}
 	}
 
-	if violations := validateGetUserReq(req); violations != nil {
-		return nil, gpt_error.InvalidArgumentError(violations)
+	if violations := validateGetUserReqV2(req); violations != nil {
+		// return nil, gpt_error.InvalidArgumentError(violations)
+		msg, err := violations.ToJson()
+		if err != nil {
+			msg = "Invalidate argument"
+		}
+		return processResponse(ctx, codes.InvalidArgument, msg, err)
 	}
 
 	var uid uuid.UUID
@@ -151,7 +160,7 @@ func (s *Server) GetUsers(ctx context.Context, req *pb.GetUsersRequest) (*pb.Use
 		}
 	}
 	if !payload.IsInternal {
-		return nil, gpt_error.APIUnauthticatedError(err)
+		return processResponses(ctx, codes.PermissionDenied, "user is not internal", err)
 	}
 
 	pgsize := req.GetPageSize()
@@ -213,7 +222,7 @@ func (s *Server) GetUserByEmail(ctx context.Context, req *pb.GetUserByEmailReque
 }
 
 /*
-only allow user updated email and password
+only allow user updated user_name
 */
 func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UserDTOResponse, error) {
 	payload, err := s.authorizUser(ctx)
@@ -224,8 +233,12 @@ func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 			return processResponse(ctx, codes.Unauthenticated, err.Error(), err)
 		}
 	}
-	if violations := validateUpdateUserReq(req); violations != nil {
-		return nil, gpt_error.InvalidArgumentError(violations)
+	if violations := validateUpdateUserReqV2(req); violations != nil {
+		msg, err := violations.ToJson()
+		if err != nil {
+			msg = "Invalidate argument"
+		}
+		return processResponse(ctx, codes.InvalidArgument, msg, err)
 	}
 
 	var uid uuid.UUID
@@ -243,6 +256,10 @@ func (s *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb
 		UserName: pgtype.Text{
 			String: req.GetUserName(),
 			Valid:  true,
+		},
+		UpDate: pgtype.Timestamptz{
+			Time:  time.Now().UTC(),
+			Valid: true,
 		},
 	}
 
@@ -274,8 +291,12 @@ func (s *Server) UpdateUserPas(ctx context.Context, req *pb.UpdateUserPasRequest
 			return processResponse(ctx, codes.Unauthenticated, err.Error(), err)
 		}
 	}
-	if violations := validateUpdateUserPasReq(req); violations != nil {
-		return nil, gpt_error.InvalidArgumentError(violations)
+	if violations := validateUpdateUserPasReqV2(req); violations != nil {
+		msg, err := violations.ToJson()
+		if err != nil {
+			msg = "Invalidate argument"
+		}
+		return processResponse(ctx, codes.InvalidArgument, msg, err)
 	}
 
 	uid, _ := uuid.Parse(req.GetUserId())
@@ -296,6 +317,10 @@ func (s *Server) UpdateUserPas(ctx context.Context, req *pb.UpdateUserPasRequest
 		HashedPassword: pgtype.Text{
 			String: hashPas,
 			Valid:  true,
+		},
+		UpDate: pgtype.Timestamptz{
+			Time:  time.Now().UTC(),
+			Valid: true,
 		},
 	}
 
@@ -362,60 +387,68 @@ func convertUsers(users []db.User) (res []*pb.User) {
 	return res
 }
 
-func validateCreateUserReq(req *pb.CreateUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+func validateCreateUserReqV2(req *pb.CreateUserRequest) *gpt_error.Message {
+	violations := &gpt_error.Message{}
 	if err := validate.ValidateEmailFormat(req.GetEmail()); err != nil {
-		violations = append(violations, validate.FieldViolation("email", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("email", err))
 	}
 
 	if err := validate.ValidateStrongPas(req.GetPassword()); err != nil {
-		violations = append(violations, validate.FieldViolations("password", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("password", err...))
 	}
 
 	if err := validate.ValidateEmptyString(req.GetUserName()); err != nil {
-		violations = append(violations, validate.FieldViolation("user_name", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_name", err))
+	}
+	if len(violations.ErrMessage) == 0 {
+		return nil
 	}
 	return violations
 }
 
-// 如果有userId, 則驗證是否為uuid格式
-func validateGetUserReq(req *pb.GetUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+func validateGetUserReqV2(req *pb.GetUserRequest) *gpt_error.Message {
+	violations := &gpt_error.Message{}
 	if req.GetUserId() != "" {
 		if err := validate.ValidateUUID(req.GetUserId()); err != nil {
-			violations = append(violations, validate.FieldViolation("users_id", err))
+			gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_id", err))
 		}
 	}
+	if len(violations.ErrMessage) == 0 {
+		return nil
+	}
 	return violations
 }
 
-// func validateGetUserByEmailReq(req *pb.GetUserByEmailRequest) (violations []*errdetails.BadRequest_FieldViolation) {
-// 	if err := validate.ValidateEmptyString(req.GetEmail()); err != nil {
-// 		violations = append(violations, validate.FieldViolation("email", err))
-// 	}
-// 	return violations
-// }
-
-func validateUpdateUserReq(req *pb.UpdateUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+func validateUpdateUserReqV2(req *pb.UpdateUserRequest) *gpt_error.Message {
+	violations := &gpt_error.Message{}
 	if err := validate.ValidateEmptyString(req.GetUserId()); err != nil {
-		violations = append(violations, validate.FieldViolation("users_id", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_id", err))
 	}
 	if err := validate.ValidateUUID(req.GetUserId()); err != nil {
-		violations = append(violations, validate.FieldViolation("users_id", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_id", err))
 	}
 	if err := validate.ValidateEmptyString(req.GetUserName()); err != nil {
-		violations = append(violations, validate.FieldViolation("user_name", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_name", err))
+	}
+	if len(violations.ErrMessage) == 0 {
+		return nil
 	}
 	return violations
 }
 
-func validateUpdateUserPasReq(req *pb.UpdateUserPasRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+func validateUpdateUserPasReqV2(req *pb.UpdateUserPasRequest) *gpt_error.Message {
+	violations := &gpt_error.Message{}
 	if err := validate.ValidateEmptyString(req.GetUserId()); err != nil {
-		violations = append(violations, validate.FieldViolation("users_id", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_id", err))
 	}
 	if err := validate.ValidateUUID(req.GetUserId()); err != nil {
-		violations = append(violations, validate.FieldViolation("users_id", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("user_id", err))
 	}
 	if err := validate.ValidateStrongPas(req.GetPassword()); err != nil {
-		violations = append(violations, validate.FieldViolations("password", err))
+		gpt_error.AddErrFieldString(violations, gpt_error.NewErrField("password", err...))
+	}
+	if len(violations.ErrMessage) == 0 {
+		return nil
 	}
 	return violations
 }

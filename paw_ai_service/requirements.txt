@@ -14,6 +14,9 @@ Flask==3.0.2
 flask-marshmallow==1.2.0
 frozenlist==1.4.1
 greenlet==3.0.3
+grpcio==1.62.0
+grpcio-reflection==1.62.0
+grpcio-tools==1.62.0
 h11==0.14.0
 httpcore==1.0.4
 httpx==0.27.0
@@ -36,6 +39,7 @@ numpy==1.26.4
 openai==1.12.0
 packaging==23.2
 pluggy==1.4.0
+protobuf==4.25.3
 pydantic==2.6.1
 pydantic_core==2.16.2
 pytest==8.0.1
