@@ -479,7 +479,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/CreateUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/CreateUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -504,7 +504,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -529,7 +529,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUsers", runtime.WithHTTPPathPattern("/v1/users"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUsers", runtime.WithHTTPPathPattern("/api/v1/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -554,7 +554,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUserByEmail", runtime.WithHTTPPathPattern("/v1/user/email"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/GetUserByEmail", runtime.WithHTTPPathPattern("/api/v1/user/email"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -579,7 +579,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/UpdateUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/UpdateUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -604,7 +604,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/UpdateUserPas", runtime.WithHTTPPathPattern("/v1/user/password"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/UpdateUserPas", runtime.WithHTTPPathPattern("/api/v1/user/password"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -629,7 +629,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/Login", runtime.WithHTTPPathPattern("/v1/login"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/Login", runtime.WithHTTPPathPattern("/api/v1/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -654,7 +654,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/Logout", runtime.WithHTTPPathPattern("/v1/logout"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/Logout", runtime.WithHTTPPathPattern("/api/v1/logout"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -679,7 +679,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/RefreshToken", runtime.WithHTTPPathPattern("/v1/refresh"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/RefreshToken", runtime.WithHTTPPathPattern("/api/v1/refresh"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -704,7 +704,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/SendVertifyEmai", runtime.WithHTTPPathPattern("/v1/vertifyEmail/send"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/SendVertifyEmai", runtime.WithHTTPPathPattern("/api/v1/vertifyEmail/send"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -729,7 +729,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/VertifyEmail", runtime.WithHTTPPathPattern("/v1/vertifyEmail"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/VertifyEmail", runtime.WithHTTPPathPattern("/api/v1/vertifyEmail"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -754,7 +754,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/SSOGoogleLogin", runtime.WithHTTPPathPattern("/v1/sso/google"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/SSOGoogleLogin", runtime.WithHTTPPathPattern("/api/v1/sso/google"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -779,7 +779,7 @@ func RegisterAccountServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/ValidateToken", runtime.WithHTTPPathPattern("/v1/token/vaildate"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pb.AccountService/ValidateToken", runtime.WithHTTPPathPattern("/api/v1/token/vaildate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -843,7 +843,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/CreateUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/CreateUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -865,7 +865,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -887,7 +887,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUsers", runtime.WithHTTPPathPattern("/v1/users"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUsers", runtime.WithHTTPPathPattern("/api/v1/users"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -909,7 +909,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUserByEmail", runtime.WithHTTPPathPattern("/v1/user/email"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/GetUserByEmail", runtime.WithHTTPPathPattern("/api/v1/user/email"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -931,7 +931,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/UpdateUser", runtime.WithHTTPPathPattern("/v1/user"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/UpdateUser", runtime.WithHTTPPathPattern("/api/v1/user"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -953,7 +953,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/UpdateUserPas", runtime.WithHTTPPathPattern("/v1/user/password"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/UpdateUserPas", runtime.WithHTTPPathPattern("/api/v1/user/password"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -975,7 +975,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/Login", runtime.WithHTTPPathPattern("/v1/login"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/Login", runtime.WithHTTPPathPattern("/api/v1/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -997,7 +997,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/Logout", runtime.WithHTTPPathPattern("/v1/logout"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/Logout", runtime.WithHTTPPathPattern("/api/v1/logout"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1019,7 +1019,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/RefreshToken", runtime.WithHTTPPathPattern("/v1/refresh"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/RefreshToken", runtime.WithHTTPPathPattern("/api/v1/refresh"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1041,7 +1041,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/SendVertifyEmai", runtime.WithHTTPPathPattern("/v1/vertifyEmail/send"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/SendVertifyEmai", runtime.WithHTTPPathPattern("/api/v1/vertifyEmail/send"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1063,7 +1063,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/VertifyEmail", runtime.WithHTTPPathPattern("/v1/vertifyEmail"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/VertifyEmail", runtime.WithHTTPPathPattern("/api/v1/vertifyEmail"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1085,7 +1085,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/SSOGoogleLogin", runtime.WithHTTPPathPattern("/v1/sso/google"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/SSOGoogleLogin", runtime.WithHTTPPathPattern("/api/v1/sso/google"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1107,7 +1107,7 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/ValidateToken", runtime.WithHTTPPathPattern("/v1/token/vaildate"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pb.AccountService/ValidateToken", runtime.WithHTTPPathPattern("/api/v1/token/vaildate"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1127,31 +1127,31 @@ func RegisterAccountServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_AccountService_CreateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "user"}, ""))
+	pattern_AccountService_CreateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "user"}, ""))
 
-	pattern_AccountService_GetUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "user"}, ""))
+	pattern_AccountService_GetUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "user"}, ""))
 
-	pattern_AccountService_GetUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "users"}, ""))
+	pattern_AccountService_GetUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "users"}, ""))
 
-	pattern_AccountService_GetUserByEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "user", "email"}, ""))
+	pattern_AccountService_GetUserByEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "user", "email"}, ""))
 
-	pattern_AccountService_UpdateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "user"}, ""))
+	pattern_AccountService_UpdateUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "user"}, ""))
 
-	pattern_AccountService_UpdateUserPas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "user", "password"}, ""))
+	pattern_AccountService_UpdateUserPas_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "user", "password"}, ""))
 
-	pattern_AccountService_Login_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "login"}, ""))
+	pattern_AccountService_Login_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "login"}, ""))
 
-	pattern_AccountService_Logout_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "logout"}, ""))
+	pattern_AccountService_Logout_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "logout"}, ""))
 
-	pattern_AccountService_RefreshToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "refresh"}, ""))
+	pattern_AccountService_RefreshToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "refresh"}, ""))
 
-	pattern_AccountService_SendVertifyEmai_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "vertifyEmail", "send"}, ""))
+	pattern_AccountService_SendVertifyEmai_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "vertifyEmail", "send"}, ""))
 
-	pattern_AccountService_VertifyEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "vertifyEmail"}, ""))
+	pattern_AccountService_VertifyEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "vertifyEmail"}, ""))
 
-	pattern_AccountService_SSOGoogleLogin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "sso", "google"}, ""))
+	pattern_AccountService_SSOGoogleLogin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "sso", "google"}, ""))
 
-	pattern_AccountService_ValidateToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "token", "vaildate"}, ""))
+	pattern_AccountService_ValidateToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "token", "vaildate"}, ""))
 )
 
 var (

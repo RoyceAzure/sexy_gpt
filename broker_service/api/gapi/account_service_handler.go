@@ -151,11 +151,6 @@ func (server *AccountServer) VertifyEmail(ctx context.Context, req *pb.VertifyEm
 }
 
 func (server *AccountServer) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenRequest) (*pb.AuthDTOResponse, error) {
-	_, _, err := server.authorizer.AuthorizToken(ctx)
-	if err != nil {
-		return processAuthResponse(ctx, codes.Unauthenticated, err.Error(), err)
-	}
-
 	return server.accountServiceDao.SSOGoogleLogin(ctx, req)
 }
 

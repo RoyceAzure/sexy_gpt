@@ -66,8 +66,8 @@ services:
       - postgres
       - logger-service
       - redis-asynq
-    command: ["/app/main"]
-    # command: ["sh","/app/wait-for.sh","postgres:5432", "--","/app/main"]
+    # command: ["/app/main"]
+    command: ["sh","/app/wait-for.sh","postgres:5432", "--","/app/main"]
 
   logger-service:
     build:

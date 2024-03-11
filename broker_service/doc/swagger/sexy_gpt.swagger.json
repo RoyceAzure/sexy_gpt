@@ -116,7 +116,7 @@
         ]
       }
     },
-    "/v1/login": {
+    "/api/v1/login": {
       "post": {
         "summary": "Login a user",
         "description": "Use this API to login a user",
@@ -150,7 +150,7 @@
         ]
       }
     },
-    "/v1/logout": {
+    "/api/v1/logout": {
       "get": {
         "summary": "Logout user",
         "description": "需要token，Use this API to logout user",
@@ -174,7 +174,7 @@
         ]
       }
     },
-    "/v1/refresh": {
+    "/api/v1/refresh": {
       "post": {
         "summary": "Refresh token",
         "description": "不需要token，Use this API to refresh token",
@@ -208,7 +208,7 @@
         ]
       }
     },
-    "/v1/sso/google": {
+    "/api/v1/sso/google": {
       "post": {
         "summary": "for google sso login",
         "description": "for google sso login, given token in body",
@@ -242,7 +242,7 @@
         ]
       }
     },
-    "/v1/token/vaildate": {
+    "/api/v1/token/vaildate": {
       "post": {
         "summary": "validate access token",
         "description": "validate access token",
@@ -276,7 +276,7 @@
         ]
       }
     },
-    "/v1/user": {
+    "/api/v1/user": {
       "get": {
         "summary": "Get user",
         "description": "需要token，uuid必填,若沒有填，則使用Token內的uuid查詢(查詢自己)，只有內部使用者可以查詢其他使用者資料",
@@ -372,7 +372,7 @@
         ]
       }
     },
-    "/v1/user/email": {
+    "/api/v1/user/email": {
       "get": {
         "summary": "Get user by email",
         "description": "需要token，email非必填，只有內部使用者會根據email查詢，一般使用者使用token內的email資料查詢",
@@ -404,7 +404,7 @@
         ]
       }
     },
-    "/v1/user/password": {
+    "/api/v1/user/password": {
       "patch": {
         "summary": "Update user password",
         "description": "需要token，userId, pas必填, 修改使用者密碼，修改完後要再call logout，讓使用者重新登入",
@@ -438,7 +438,7 @@
         ]
       }
     },
-    "/v1/users": {
+    "/api/v1/users": {
       "get": {
         "summary": "Get all users",
         "description": "需token，參數都是非必填，只有內部使用者可以使用，查詢所有user資料",
@@ -478,7 +478,7 @@
         ]
       }
     },
-    "/v1/vertifyEmail": {
+    "/api/v1/vertifyEmail": {
       "get": {
         "summary": "vertified email",
         "description": "不需要token，Use this API to vertified email",
@@ -516,7 +516,7 @@
         ]
       }
     },
-    "/v1/vertifyEmail/send": {
+    "/api/v1/vertifyEmail/send": {
       "post": {
         "summary": "send verify email",
         "description": "不需要token，記送認證信，email不存在一樣返回成功",
@@ -614,7 +614,7 @@
     "pbGoogleIDTokenRequest": {
       "type": "object",
       "properties": {
-        "idToken": {
+        "token": {
           "type": "string"
         }
       }

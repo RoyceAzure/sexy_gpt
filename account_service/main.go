@@ -268,10 +268,8 @@ func initDB(ctx context.Context, dao db.Dao) error {
 	var user db.User
 	var err error
 	if user, err = dao.GetUserByEmail(ctx, "roycewnag123@gmail.com"); err != nil {
-		pas, err := util.HashPassword("Royce123456")
-		if err != nil {
-			return err
-		}
+		//user不存在
+		pas, _ := util.HashPassword("Royce123456")
 		_, err = dao.CreateUserTx(ctx, &db.CreateUserTxParms{
 			Arg: &db.CreateUserParams{
 				UserName:       "royce",
@@ -286,16 +284,13 @@ func initDB(ctx context.Context, dao db.Dao) error {
 			return err
 		}
 	}
-	_, err = dao.UpdateUser(ctx, db.UpdateUserParams{
+	dao.UpdateUser(ctx, db.UpdateUserParams{
 		UserID: user.UserID,
 		IsEmailVerified: pgtype.Bool{
 			Bool:  true,
 			Valid: true,
 		},
 	})
-	if err != nil {
-		return err
-	}
 	return nil
 }
 func runTaskProcessor(configs config.Config, redisOpt asynq.RedisClientOpt, dao db.Dao) {
