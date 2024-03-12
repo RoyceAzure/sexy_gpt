@@ -143,7 +143,7 @@ func (s *Server) RefreshToken(ctx context.Context, req *pb.RefreshTokenRequset) 
 	}
 
 	if session.RefreshToken != req.GetRefreshToken() {
-		return processAuthResponse(ctx, codes.Unauthenticated, "invalid token", err)
+		return processAuthResponse(ctx, codes.Unauthenticated, "invalid refresh token", err)
 	}
 
 	tokenSubject := token.NewTokenSubject(payload.Email, payload.UserId, payload.RoleId)

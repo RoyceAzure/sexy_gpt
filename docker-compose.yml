@@ -82,6 +82,25 @@ services:
       - redis-asynq
     command: ["/app/main"]
 
+  broker-service:
+    build:
+      context: ./broker_service
+      dockerfile: Dockerfile.broker
+    environment:
+      - MONGODB_ADDRESS=mongodb://mongo:27017
+      - REDIS_Q_ADDRESS=redis-asynq:6379
+      - SERVICEID=broker_service_01
+      - GRPC_ACCOUNT_ADDRESS=account-service:9091
+      - GRPC_PAWAI_ADDRESS=pawai-service:9092
+    ports:
+      - "8080:8080"
+    depends_on:
+      - account-service
+      - logger-service
+      - redis-asynq
+    command: ["/app/main"]
+
+
 volumes:
   sexy_gpt_ps_volume:
   sexy_gpt_mongo_volume:
