@@ -18,6 +18,7 @@ import (
 	"github.com/RoyceAzure/sexy_gpt/account_service/shared/util/validate"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

@@ -21,7 +21,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -84,9 +83,9 @@ func main() {
 
 	w := worker.NewRedisTaskDistributor(redisOpt)
 	go runTaskProcessor(config, redisOpt, dao)
-	go runGRPCServer(config, dao, w)
+	runGRPCServer(config, dao, w)
 
-	runGRPCGatewayServer(config, dao, w)
+	// runGRPCGatewayServer(config, dao, w)
 }
 
 func runDBMigration(migrationURL string, dbSource string) {
@@ -125,8 +124,8 @@ func runGRPCServer(configs config.Config, dao db.Dao, worker worker.ITaskDistrib
 		使用 pb.RegisterStockInfoServer 函數註冊了先前創建的伺服器實例，使其能夠處理 StockInfoServer 接口的 RPC 請求。
 	*/
 	//NewServer 可以接收多個grpc.ServerOption  而上面的Interceptor 就是一個grpc.ServerOption
-	unaryInterceptor := grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(gapi.IdMiddleWare, gapi.GrpcLogger))
-	grpcServer := grpc.NewServer(unaryInterceptor)
+	// unaryInterceptor := grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(gapi.IdMiddleWare))
+	grpcServer := grpc.NewServer()
 	/*
 		gRPC 中，一個 grpc.Server 可以註冊多個服務接口。
 		每個服務接口通常對應於 .proto 文件中定義的一個 service。這允許單個 gRPC 伺服器同時提供多個服務，而不需要啟動多個伺服器實例。
