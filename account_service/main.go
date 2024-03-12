@@ -56,8 +56,11 @@ func main() {
 
 	runDBMigration(config.MigrateURL, config.DBSource)
 
-	if err := initDB(ctx, dao); err != nil {
-		log.Fatal().Err(err).Msg("err init db")
+	if config.Enviornmant == constants.ENV_DEV {
+
+		if err := initDB(ctx, dao); err != nil {
+			log.Fatal().Err(err).Msg("err init db")
+		}
 	}
 
 	//setUP logger
@@ -69,6 +72,14 @@ func main() {
 	err = logger.SetUpLoggerDistributor(loggerDis, config.ServiceID)
 	if err != nil {
 		logger.Logger.Fatal().Err(err).Msg("err create db connect")
+	}
+
+	if config.Enviornmant == constants.ENV_DEV {
+		logger.Logger.Info().Msg("init DB in develop env")
+		if err := initDB(ctx, dao); err != nil {
+			log.Fatal().Err(err).Msg("err init db")
+		}
+		logger.Logger.Info().Msg("init DB in develop env successed")
 	}
 
 	w := worker.NewRedisTaskDistributor(redisOpt)
