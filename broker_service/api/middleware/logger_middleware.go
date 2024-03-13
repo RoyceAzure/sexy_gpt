@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"time"
 
@@ -52,13 +54,17 @@ func HttpLogger(next http.Handler) http.Handler {
 
 		reqId := req.Header.Get(string(util.RequestIDKey))
 
+		saveReqBody, _ := saveReqBodyForLater(req)
+
 		next.ServeHTTP(rec, req)
 
 		if rec.StatusCode != http.StatusOK {
 			log = logger.Logger.Error().Bytes("res body", rec.Body)
+		} else {
+			log.Bytes("res body", rec.Body)
 		}
 
-		dbMsg := rec.Header().Get(util.DBMSGKey)
+		dbMsg := rec.ResponseWriter.Header().Get(util.DBMSGKey)
 
 		duration := time.Since(startTime).Milliseconds()
 		log.Str("protocol", "http").
@@ -69,6 +75,19 @@ func HttpLogger(next http.Handler) http.Handler {
 			Int("status_code", rec.StatusCode).
 			Str("status_text", http.StatusText(rec.StatusCode)).
 			Int64("duration in ms", duration).
+			Bytes("req body", saveReqBody).
 			Msg("received a HTTP request")
 	})
+}
+
+func saveReqBodyForLater(req *http.Request) ([]byte, error) {
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer req.Body.Close()
+
+	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	return bodyBytes, nil
 }

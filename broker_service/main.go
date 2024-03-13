@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/RoyceAzure/sexy_gpt/broker_service/api/gapi"
+	gapi_middleware "github.com/RoyceAzure/sexy_gpt/broker_service/api/gapi/middleware"
 	"github.com/RoyceAzure/sexy_gpt/broker_service/api/middleware"
 	"github.com/RoyceAzure/sexy_gpt/broker_service/api/token"
 	accountservicedao "github.com/RoyceAzure/sexy_gpt/broker_service/repository/account_service_dao"
@@ -29,7 +30,9 @@ func main() {
 			Err(err).
 			Msg("cannot start gateway http server")
 	}
-	setUpLoggerDistributor(config.RedisQueueAddress, config.ServiceID)
+
+	redisClient := setUpLoggerDistributor(config.RedisQueueAddress, config.ServiceID)
+	defer redisClient.Close()
 
 	accoutServiceDao, closeConnAccount, err := accountservicedao.NewAccountServiceDao(config.GrpcAccountAddress)
 	if err != nil {
@@ -51,7 +54,7 @@ func main() {
 
 }
 
-func setUpLoggerDistributor(address string, serviceId string) {
+func setUpLoggerDistributor(address string, serviceId string) *asynq.Client {
 	redisOpt := asynq.RedisClientOpt{
 		Addr: address,
 	}
@@ -63,6 +66,7 @@ func setUpLoggerDistributor(address string, serviceId string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("err create mongo db connect")
 	}
+	return redisClient
 }
 
 func runGRPCGatewayServer(
@@ -115,7 +119,7 @@ func runGRPCGatewayServer(
 
 	是的，它是一個特殊的多路復用器，專為將 HTTP 請求轉換為 gRPC 請求而設計。當一個 HTTP 請求到達時，這個多路復用器會根據註冊的 gRPC 路由和方法轉換該請求，然後轉發它到對應的 gRPC 伺服器方法。
 	總之，runtime.NewServeMux() 既是一個 handler，也是一個 multiplexer，但它專為 grpc-gateway 設計，用於在 gRPC 伺服器和 HTTP 客戶端之間進行轉換和路由。*/
-	grpcMux := runtime.NewServeMux(jsonOpt, runtime.WithMetadata(middleware.CustomMatcher))
+	grpcMux := runtime.NewServeMux(jsonOpt, runtime.WithMetadata(middleware.CustomMatcher), runtime.WithOutgoingHeaderMatcher(gapi_middleware.CustomOutgoingHeaderMatcher))
 
 	// 創建一個可取消的背景上下文
 	ctx, cancel := context.WithCancel(context.Background())

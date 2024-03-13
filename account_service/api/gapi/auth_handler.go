@@ -53,7 +53,7 @@ func (s *Server) Login(ctx context.Context, req *pb.LoginRequset) (*pb.AuthDTORe
 	user, err := s.Service.IsValidateUser(ctx, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, gpt_error.ErrNotFound) {
-			return processAuthResponse(ctx, codes.NotFound, "user not exists", err)
+			return processAuthResponse(ctx, codes.NotFound, "wrong email or password", err)
 		} else if errors.Is(err, gpt_error.ErrUnauthicated) {
 			return processAuthResponse(ctx, codes.PermissionDenied, "user email is not vertified", err)
 		} else {

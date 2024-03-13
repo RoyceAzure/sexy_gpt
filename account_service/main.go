@@ -66,12 +66,9 @@ func main() {
 	redisOpt := asynq.RedisClientOpt{
 		Addr: config.RedisQueueAddress,
 	}
-	redisClient := asynq.NewClient(redisOpt)
-	loggerDis := logger.NewLoggerDistributor(redisClient)
-	err = logger.SetUpLoggerDistributor(loggerDis, config.ServiceID)
-	if err != nil {
-		logger.Logger.Fatal().Err(err).Msg("err create db connect")
-	}
+
+	redisClient := setUpLoggerDistributor(config.RedisQueueAddress, config.ServiceID)
+	defer redisClient.Close()
 
 	if config.Enviornmant == constants.ENV_DEV {
 		logger.Logger.Info().Msg("init DB in develop env")
@@ -102,6 +99,21 @@ func runDBMigration(migrationURL string, dbSource string) {
 			Err(err).
 			Msg("failed to run db migrate err")
 	}
+}
+
+func setUpLoggerDistributor(address string, serviceId string) *asynq.Client {
+	redisOpt := asynq.RedisClientOpt{
+		Addr: address,
+	}
+
+	//set up mongo logger
+	redisClient := asynq.NewClient(redisOpt)
+	loggerDis := logger.NewLoggerDistributor(redisClient)
+	err := logger.SetUpLoggerDistributor(loggerDis, serviceId)
+	if err != nil {
+		log.Fatal().Err(err).Msg("err create mongo db connect")
+	}
+	return redisClient
 }
 
 func runGRPCServer(configs config.Config, dao db.Dao, worker worker.ITaskDistributor) {

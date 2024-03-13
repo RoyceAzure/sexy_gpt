@@ -9,7 +9,9 @@ import (
 	"github.com/RoyceAzure/sexy_gpt/broker_service/shared/util"
 	"github.com/RoyceAzure/sexy_gpt/broker_service/shared/util/validate"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -20,6 +22,11 @@ func processResponse(ctx context.Context, code codes.Code, msg string, err error
 			err = fmt.Errorf(msg)
 		}
 		util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		headerMD := metadata.Pairs(
+			util.DBMSGKey, err.Error(),
+		)
+
+		grpc.SendHeader(ctx, headerMD)
 		return &res, status.Errorf(code, msg)
 	}
 	return &res, nil
@@ -29,6 +36,11 @@ func processResponses(ctx context.Context, code codes.Code, msg string, err erro
 	res := pb.UserDTOsResponse{Message: msg}
 	if code != codes.OK {
 		util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		headerMD := metadata.Pairs(
+			util.DBMSGKey, err.Error(),
+		)
+
+		grpc.SendHeader(ctx, headerMD)
 		return &res, status.Errorf(code, msg)
 	}
 	return &res, nil
@@ -40,7 +52,11 @@ func processAuthResponse(ctx context.Context, code codes.Code, msg string, err e
 		if err == nil {
 			err = fmt.Errorf(msg)
 		}
-		util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		// util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		headerMD := metadata.Pairs(
+			util.DBMSGKey, err.Error(),
+		)
+		grpc.SendHeader(ctx, headerMD)
 		return &res, status.Errorf(code, msg)
 	}
 	return &res, nil
@@ -53,6 +69,11 @@ func processVertifyEmailResponse(ctx context.Context, code codes.Code, msg strin
 			err = fmt.Errorf(msg)
 		}
 		util.NewOutGoingMetaDataKV(ctx, util.DBMSGKey, err.Error())
+		headerMD := metadata.Pairs(
+			util.DBMSGKey, err.Error(),
+		)
+
+		grpc.SendHeader(ctx, headerMD)
 		return &res, status.Errorf(code, msg)
 	}
 	return &res, nil
@@ -62,6 +83,7 @@ func (server *AccountServer) CreateUser(ctx context.Context, req *pb.CreateUserR
 	if violations := validateCreateUserReq(req); violations != nil {
 		return nil, gpt_error.InvalidArgumentError(violations)
 	}
+
 	return server.accountServiceDao.CreateUser(ctx, req)
 }
 
@@ -70,15 +92,6 @@ func (server *AccountServer) GetUser(ctx context.Context, req *pb.GetUserRequest
 	if err != nil {
 		return processResponse(ctx, codes.Unauthenticated, err.Error(), err)
 	}
-
-	// call account service不用這段
-
-	// _, err = server.AccountServiceDao.ValidateToken(ctx, &pb.ValidateTokenRequest{
-	// 	AccessToken: token,
-	// })
-	// if err != nil {
-	// 	return processResponse(ctx, codes.Unauthenticated, err.Error(), err)
-	// }
 
 	return server.accountServiceDao.GetUser(ctx, req, token)
 }
@@ -146,8 +159,8 @@ func (server *AccountServer) SendVertifyEmai(ctx context.Context, req *pb.SendVe
 }
 
 func (server *AccountServer) VertifyEmail(ctx context.Context, req *pb.VertifyEmailRequset) (*pb.VertifyEmailResponse, error) {
-
 	return server.accountServiceDao.VertifyEmail(ctx, req)
+
 }
 
 func (server *AccountServer) SSOGoogleLogin(ctx context.Context, req *pb.GoogleIDTokenRequest) (*pb.AuthDTOResponse, error) {

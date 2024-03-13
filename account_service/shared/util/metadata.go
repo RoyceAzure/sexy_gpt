@@ -66,8 +66,8 @@ func NewOutGoingMetaData(ctx context.Context, accessToken string) context.Contex
 	return metadata.NewOutgoingContext(ctx, md)
 }
 
-// add key value pairs in ctx
+// add key value pairs in ctx header MD
 func NewOutGoingMetaDataKV(ctx context.Context, key string, value string) {
 	md := metadata.Pairs(key, value)
-	grpc.SetTrailer(ctx, md)
+	grpc.SendHeader(ctx, md)
 }
