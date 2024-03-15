@@ -1,6 +1,7 @@
 import uuid
 from flask import Blueprint, jsonify
 from flask import request
+from openai import RateLimitError
 from repository.database import SQLAlchemyConnFactory
 from model.chat_tools import SQLAlchemyTools, SQLAlchemy_Sqllite_Tools
 from model.openail_model import ChatModelFactory
@@ -48,16 +49,19 @@ def chat_users():
     
     try:
         result = wrap_agent_excutor.chat_with_agent(ques)
-        response = {
-            "code":200,
-            "ans" : result["output"]
-        }
+        code = 200
+        ans = result["output"]
+    except RateLimitError as re:
+        code = 429
+        ans = "not enough of quato"
     except Exception as e:
-        print(e)
-        response ={
-            "code":e.status_code,
-            "ans" : e.code
-        }
+        code = e.status_code
+        ans = "internal err"
+        
+    response = {
+        "code" : code,
+        "ans" : ans,
+    }
 
     return response
 
@@ -135,15 +139,19 @@ def free_chat():
     
     try:
         result = wrap_agent_excutor.chat_with_agent(ques)
-        response = {
-            "code":200,
-            "ans" : result["output"]
-        }
+        code = 200
+        ans = result["output"]
+    except RateLimitError as re:
+        code = 429
+        ans = "not enough of quato"
     except Exception as e:
-        response ={
-            "code":e.status_code,
-            "ans" : e.code
-        }
+        code = e.status_code
+        ans = "internal err"
+        
+    response = {
+        "code" : code,
+        "ans" : ans,
+    }
 
 
     return response

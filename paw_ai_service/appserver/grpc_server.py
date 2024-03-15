@@ -2,6 +2,7 @@ from concurrent import futures
 import uuid
 import grpc
 from marshmallow import ValidationError
+from openai import RateLimitError
 from chatconfig.config_manager import ConfigManager
 from model.agent import ChatArgs, SingleTonAgenFactory
 from model.chat_tools import SQLAlchemy_Sqllite_Tools
@@ -33,10 +34,18 @@ class PawAIServer(PawAIServiceServicer):
         
         wrap_agent_excutor = agent_factory.build_agent_excutor(chat_arg)
         
-        
-        result = wrap_agent_excutor.chat_with_agent(ques)
-
-        response = chat__pb2.ChatResponse(code = 200, ans = result["output"])
+        try:
+            result = wrap_agent_excutor.chat_with_agent(ques)
+            code = 200
+            ans = result["output"]
+        except RateLimitError as re:
+            code = 429
+            ans = "not enough of quato"
+        except Exception as e:
+            code = e.status_code
+            ans = "internal err"
+            
+        response = chat__pb2.ChatResponse(code = code, ans = ans)
         
         return response
 
@@ -70,11 +79,18 @@ class PawAIServer(PawAIServiceServicer):
         
         wrap_agent_excutor = agent_factory.build_agent_excutor(chat_arg)
         
-        
-        result = wrap_agent_excutor.chat_with_agent(ques)
+        try:
+            result = wrap_agent_excutor.chat_with_agent(ques)
+            code = 200
+            ans = result["output"]
+        except RateLimitError as re:
+            code = 429
+            ans = "not enough of quato"
+        except Exception as e:
+            code = e.status_code
+            ans = "internal err"
 
-
-        response = chat__pb2.ChatResponse(code = 200, ans = result["output"])
+        response = chat__pb2.ChatResponse(code = code, ans = ans)
 
         return response
     
